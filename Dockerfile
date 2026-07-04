@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # install system dependencies
 RUN apt-get update \
-    && apt-get -y install --no-install-recommends libpq-dev gcc curl \
+    && apt-get -y install --no-install-recommends libpq-dev gcc curl gettext \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
@@ -30,6 +30,8 @@ RUN pip install --upgrade pip \
 
 # Copy project
 COPY . /django/
+
+RUN django-admin compilemessages --ignore ".venv/*" --verbosity 0
 
 RUN groupadd --gid "${GID}" django \
     && useradd --uid "${UID}" --gid "${GID}" --create-home django \
