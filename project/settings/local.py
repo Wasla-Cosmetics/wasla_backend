@@ -3,7 +3,7 @@ from pathlib import Path
 from os import environ as env
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
-
+from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
@@ -43,11 +43,18 @@ BUILT_IN_APPS = [
     "django.contrib.staticfiles",
 ]
 
-LOCAL_APPS = [
-    "apps.core.apps.CoreConfig",
+THIRD_PARTY_APPS = [
+    "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
+    "django_filters",
 ]
 
-INSTALLED_APPS = BUILT_IN_APPS + LOCAL_APPS
+LOCAL_APPS = [
+    "apps.core.apps.CoreConfig",
+    "apps.authentication.apps.AuthenticationConfig",
+]
+
+INSTALLED_APPS = BUILT_IN_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 BUILT_IN_MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -60,7 +67,11 @@ BUILT_IN_MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-MIDDLEWARE = BUILT_IN_MIDDLEWARE
+LOCAL_MIDDLEWARE = [
+    "project.middlewares.TokenAuthMiddleware",
+]
+
+MIDDLEWARE = BUILT_IN_MIDDLEWARE + LOCAL_MIDDLEWARE
 
 # URL Configuration
 ROOT_URLCONF = "project.urls"
@@ -153,3 +164,27 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Media files
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+AUTH_USER_MODEL = "authentication.AuthenticatedUser"
+AUTH_OTP_TTL_MINUTES = int(env.get("AUTH_OTP_TTL_MINUTES", "10"))
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.authentication.authentication.HeaderTokenAuthentication",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "EXCEPTION_HANDLER": "project.exception_handler.custom_exception_handler",
+    "PAGE_SIZE": 10,
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+}

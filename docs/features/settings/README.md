@@ -20,6 +20,7 @@ ENV=local
 SECRET_KEY=change-me
 ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 DEBUG=True
+AUTH_OTP_TTL_MINUTES=10
 
 DATABASE_TYPE=postgres
 
