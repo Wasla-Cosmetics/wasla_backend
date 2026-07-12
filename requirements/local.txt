@@ -7,3 +7,8 @@ packaging==26.2
 pathspec==1.1.1
 platformdirs==4.10.0
 pytokens==0.4.1
+django-stubs==6.0.6
+django-stubs-ext==6.0.6
+djangorestframework-stubs==3.17.0
+types-pyyaml==6.0.12.20260518
+typing-extensions==4.16.0
