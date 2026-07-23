@@ -13,6 +13,8 @@ class AuthenticatedUser(AbstractUser):
     points = models.PositiveIntegerField(_("points"), default=0)
     otp = models.CharField(_("otp"), max_length=6, null=True, blank=True)
     otp_expires_at = models.DateTimeField(_("otp expires at"), null=True, blank=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
     objects = UserManager()
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["email", "full_name"]
@@ -27,6 +29,8 @@ class AuthenticatedUser(AbstractUser):
 
 class AnonymousUser(models.Model):
     session_key = models.CharField(_("session key"), max_length=40, unique=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     @property
     def is_anonymous(self):

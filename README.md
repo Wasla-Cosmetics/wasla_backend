@@ -36,6 +36,8 @@ Feature and workflow documentation lives in focused README files:
 - [App Generation](docs/features/app-generation/README.md)
 - [Settings Environments](docs/features/settings/README.md)
 - [Development Commands](docs/features/development-commands/README.md)
+- [API Behavior](docs/features/api-behavior/README.md)
+- [Store App](docs/features/store/README.md)
 
 ## Tech Stack
 

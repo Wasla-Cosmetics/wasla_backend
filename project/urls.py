@@ -19,6 +19,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     path("api/auth/", include("apps.authentication.urls")),
+    path("api/store/", include("apps.store.urls")),
 ]
 
 if settings.DEBUG:
