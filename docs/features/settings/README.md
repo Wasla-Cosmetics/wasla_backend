@@ -19,6 +19,7 @@ DJANGO_PORT=8000
 ENV=local
 SECRET_KEY=change-me
 ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+CSRF_TRUSTED_ORIGINS=
 DEBUG=True
 AUTH_OTP_TTL_MINUTES=10
 
@@ -44,6 +45,19 @@ For local commands without Docker, use SQLite:
 ```env
 DATABASE_TYPE=sqlite3
 SQLITE_NAME=db.sqlite3
+```
+
+## Ngrok And CSRF
+
+When using Django admin or browser form POST requests through ngrok, include the
+ngrok host in `ALLOWED_HOSTS` without a scheme and in `CSRF_TRUSTED_ORIGINS`
+with the `https://` scheme.
+
+Example:
+
+```env
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,vocal-duckling-steadily.ngrok-free.app
+CSRF_TRUSTED_ORIGINS=https://vocal-duckling-steadily.ngrok-free.app
 ```
 
 ## Supported ENV Values

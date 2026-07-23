@@ -29,6 +29,7 @@ SECRET_KEY = env.get("SECRET_KEY", "django-insecure-local-development-key-change
 
 # Allowed hosts
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1,0.0.0.0")
+CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env_bool("DEBUG", True)
