@@ -47,11 +47,13 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "django_filters",
+    "mptt",
 ]
 
 LOCAL_APPS = [
     "apps.core.apps.CoreConfig",
     "apps.authentication.apps.AuthenticationConfig",
+    "apps.store.apps.StoreConfig",
 ]
 
 INSTALLED_APPS = BUILT_IN_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -172,8 +174,9 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "apps.authentication.authentication.HeaderTokenAuthentication",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.OptionalPageNumberPagination",
     "EXCEPTION_HANDLER": "project.exception_handler.custom_exception_handler",
+    "COERCE_DECIMAL_TO_STRING": False,
     "PAGE_SIZE": 10,
 }
 

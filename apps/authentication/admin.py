@@ -12,6 +12,7 @@ class AuthenticatedUserAdmin(UserAdmin):
     list_filter = ("is_active", "is_staff", "is_superuser", "groups")
     search_fields = ("phone", "email", "full_name")
     ordering = ("phone",)
+    readonly_fields = ("created_at", "updated_at")
 
     fieldsets = (
         (None, {"fields": ("phone", "password")}),
@@ -29,7 +30,10 @@ class AuthenticatedUserAdmin(UserAdmin):
                 )
             },
         ),
-        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+        (
+            _("Important dates"),
+            {"fields": ("last_login", "date_joined", "created_at", "updated_at")},
+        ),
     )
     add_fieldsets = (
         (
@@ -53,5 +57,6 @@ class AuthenticatedUserAdmin(UserAdmin):
 
 @admin.register(AnonymousUser)
 class AnonymousUserAdmin(admin.ModelAdmin):
-    list_display = ("id", "session_key")
+    list_display = ("id", "session_key", "created_at", "updated_at")
     search_fields = ("session_key",)
+    readonly_fields = ("created_at", "updated_at")

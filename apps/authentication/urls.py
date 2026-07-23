@@ -16,7 +16,9 @@ from .views import (
 
 router = DefaultRouter()
 router.register(
-    "authenticated-users", AuthenticatedUserViewSet, basename="authenticated-users",
+    "authenticated-users",
+    AuthenticatedUserViewSet,
+    basename="authenticated-users",
 )
 
 urlpatterns = [
