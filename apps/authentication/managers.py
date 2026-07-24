@@ -1,10 +1,11 @@
 from django.contrib.auth.models import UserManager as BaseUserManager
+from django.utils.translation import gettext_lazy as _
 
 
 class UserManager(BaseUserManager):
     def create_user(self, phone, password=None, **extra_fields):
         if not phone:
-            raise ValueError("The phone number must be set")
+            raise ValueError(_("The phone number must be set"))
 
         email = extra_fields.get("email")
         if email:
@@ -21,8 +22,8 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", True)
 
         if not extra_fields.get("is_staff"):
-            raise ValueError("Superuser must have is_staff=True.")
+            raise ValueError(_("Superuser must have is_staff=True."))
         if not extra_fields.get("is_superuser"):
-            raise ValueError("Superuser must have is_superuser=True.")
+            raise ValueError(_("Superuser must have is_superuser=True."))
 
         return self.create_user(phone, password, **extra_fields)

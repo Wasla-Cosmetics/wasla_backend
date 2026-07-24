@@ -1,4 +1,5 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.utils.translation import gettext as _
 from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
@@ -48,7 +49,7 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
         response = generate_successful_auth_response(
-            user, "Login Success", self.request
+            user, _("Login successful"), self.request
         )
         return Response(response, status=response["status"])
 
@@ -71,7 +72,9 @@ class VerifyOtpView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        response = generate_successful_auth_response(user, "OTP verified", self.request)
+        response = generate_successful_auth_response(
+            user, _("OTP verified"), self.request
+        )
         return Response(response, status=response["status"])
 
 
@@ -87,7 +90,7 @@ class ResetPasswordView(APIView):
         serializer.save()
         response = custom_response(
             status_code=status.HTTP_200_OK,
-            message="Password reset successfully",
+            message=_("Password reset successfully"),
             data={},
         )
         return Response(response, status=response["status"])
@@ -113,7 +116,7 @@ class ChangePasswordView(APIView):
         serializer.save()
         response = custom_response(
             status_code=status.HTTP_200_OK,
-            message="Password changed successfully",
+            message=_("Password changed successfully"),
             data={},
         )
         return Response(response, status=response["status"])
@@ -128,7 +131,7 @@ class LogoutView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = custom_response(
-            status_code=status.HTTP_200_OK, message="Logout success", data={}
+            status_code=status.HTTP_200_OK, message=_("Logout successful"), data={}
         )
         return Response(response, status=response["status"])
 
@@ -145,7 +148,7 @@ class DeleteAccountView(APIView):
         serializer.save()
         response = custom_response(
             status_code=status.HTTP_200_OK,
-            message="Account deleted successfully",
+            message=_("Account deleted successfully"),
             data={},
         )
         return Response(response, status=response["status"])

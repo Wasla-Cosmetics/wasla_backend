@@ -6,10 +6,11 @@ from pathlib import Path
 
 from django.core.management import CommandError, call_command
 from django.core.management.commands.startapp import Command as DjangoStartAppCommand
+from django.utils.translation import gettext_lazy as _
 
 
 class Command(DjangoStartAppCommand):
-    help = (
+    help = _(
         "Create a Django app, fix its dotted app path, and register it in LOCAL_APPS. "
         "A plain name creates the app at project root. A path creates it at that path. "
         "Examples: startapp orders, startapp apps/orders, startapp orders apps/orders."
@@ -24,7 +25,7 @@ class Command(DjangoStartAppCommand):
 
         apps_file = app_dir / "apps.py"
         if apps_file.exists():
-            raise CommandError(f"App already exists: {app_dir}")
+            raise CommandError(_("App already exists: %(path)s") % {"path": app_dir})
 
         self._ensure_parent_packages(app_dir)
         app_dir.mkdir(parents=True, exist_ok=True)
@@ -38,12 +39,17 @@ class Command(DjangoStartAppCommand):
         self._run_black(app_dir)
         call_command("check")
 
-        self.stdout.write(self.style.SUCCESS(f"Created and registered app: {app_path}"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                _("Created and registered app: %(app_path)s") % {"app_path": app_path}
+            )
+        )
 
     def _validate_app_name(self, app_name):
         if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", app_name):
             raise CommandError(
-                f"Invalid app name: {app_name}. Use a valid Python identifier."
+                _("Invalid app name: %(app_name)s. Use a valid Python identifier.")
+                % {"app_name": app_name}
             )
 
     def _resolve_app_target(self, name, directory):
@@ -60,7 +66,7 @@ class Command(DjangoStartAppCommand):
                 app_dir = Path(app_name)
 
         if app_dir.is_absolute() or ".." in app_dir.parts:
-            raise CommandError("App path must be a relative package path.")
+            raise CommandError(_("App path must be a relative package path."))
 
         app_path = ".".join(app_dir.parts)
         return app_name, app_dir, app_path
@@ -102,14 +108,14 @@ class Command(DjangoStartAppCommand):
                 return
 
         raise CommandError(
-            "Could not find end of LOCAL_APPS in project/settings/local.py"
+            _("Could not find end of LOCAL_APPS in project/settings/local.py")
         )
 
     def _find_local_apps_start(self, lines):
         for index, line in enumerate(lines):
             if line.startswith("LOCAL_APPS = ["):
                 return index
-        raise CommandError("Could not find LOCAL_APPS in project/settings/local.py")
+        raise CommandError(_("Could not find LOCAL_APPS in project/settings/local.py"))
 
     def _run_black(self, app_dir):
         if importlib.util.find_spec("black") is None:

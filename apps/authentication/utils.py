@@ -42,7 +42,7 @@ def handle_otp_for_user(phone, action):
 
     if not user.is_active:
         if action == "register":
-            message_status = _("Register Success, otp sent")
+            message_status = _("Registration successful, OTP sent")
             status_code = 201
         else:
             message_status = _("OTP sent")

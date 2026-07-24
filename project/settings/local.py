@@ -44,6 +44,10 @@ BUILT_IN_APPS = [
     "django.contrib.staticfiles",
 ]
 
+MODELTRANSLATION_APPS = [
+    "modeltranslation",
+]
+
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
@@ -57,7 +61,7 @@ LOCAL_APPS = [
     "apps.store.apps.StoreConfig",
 ]
 
-INSTALLED_APPS = BUILT_IN_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = MODELTRANSLATION_APPS + BUILT_IN_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 BUILT_IN_MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -153,6 +157,10 @@ LANGUAGES = [
 LOCALE_PATHS = [
     BASE_DIR / "locale",
 ]
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = "en"
+MODELTRANSLATION_LANGUAGES = ("en", "ar")
+MODELTRANSLATION_FALLBACK_LANGUAGES = ("en",)
 
 TIME_ZONE = "UTC"
 

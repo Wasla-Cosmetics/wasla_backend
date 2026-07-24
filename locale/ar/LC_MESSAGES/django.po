@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wasla Backend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-04 11:03+0000\n"
-"PO-Revision-Date: 2026-07-04 00:00+0000\n"
+"POT-Creation-Date: 2026-07-24 11:25+0000\n"
+"PO-Revision-Date: 2026-07-24 00:00+0000\n"
 "Last-Translator: Wasla Team\n"
 "Language-Team: Arabic\n"
 "Language: ar\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
-#: project/settings/local.py:135
+#: project/settings/local.py:153
 msgid "English"
 msgstr "الإنجليزية"
 
-#: project/settings/local.py:136
+#: project/settings/local.py:154
 msgid "Arabic"
 msgstr "العربية"
 
@@ -37,3 +37,284 @@ msgstr "بوابة إدارة وصلة"
 #: project/urls.py:10
 msgid "Welcome to Wasla Admin Portal"
 msgstr "مرحبًا بك في بوابة إدارة وصلة"
+
+#: apps/core/management/commands/startapp.py:13
+msgid ""
+"Create a Django app, fix its dotted app path, and register it in LOCAL_APPS. "
+"A plain name creates the app at project root. A path creates it at that path. "
+"Examples: startapp orders, startapp apps/orders, startapp orders apps/orders."
+msgstr ""
+"ينشئ تطبيق Django، ويصحح مساره النقطي، ويسجله في LOCAL_APPS. الاسم البسيط "
+"ينشئ التطبيق في جذر المشروع. والمسار ينشئه في ذلك المسار. أمثلة: startapp "
+"orders، startapp apps/orders، startapp orders apps/orders."
+
+#: apps/core/management/commands/startapp.py:28
+msgid "App already exists: %(path)s"
+msgstr "التطبيق موجود بالفعل: %(path)s"
+
+#: apps/core/management/commands/startapp.py:44
+msgid "Created and registered app: %(app_path)s"
+msgstr "تم إنشاء التطبيق وتسجيله: %(app_path)s"
+
+#: apps/core/management/commands/startapp.py:51
+msgid "Invalid app name: %(app_name)s. Use a valid Python identifier."
+msgstr "اسم التطبيق غير صالح: %(app_name)s. استخدم معرّف Python صالحًا."
+
+#: apps/core/management/commands/startapp.py:69
+msgid "App path must be a relative package path."
+msgstr "يجب أن يكون مسار التطبيق مسار حزمة نسبيًا."
+
+#: apps/core/management/commands/startapp.py:111
+msgid "Could not find end of LOCAL_APPS in project/settings/local.py"
+msgstr "تعذر العثور على نهاية LOCAL_APPS في project/settings/local.py"
+
+#: apps/core/management/commands/startapp.py:118
+msgid "Could not find LOCAL_APPS in project/settings/local.py"
+msgstr "تعذر العثور على LOCAL_APPS في project/settings/local.py"
+
+#: apps/authentication/models.py:9
+msgid "phone"
+msgstr "الهاتف"
+
+#: apps/authentication/models.py:10
+msgid "email"
+msgstr "البريد الإلكتروني"
+
+#: apps/authentication/models.py:11
+msgid "full name"
+msgstr "الاسم الكامل"
+
+#: apps/authentication/models.py:12
+msgid "active"
+msgstr "نشط"
+
+#: apps/authentication/models.py:13 apps/store/models.py:61
+msgid "points"
+msgstr "النقاط"
+
+#: apps/authentication/models.py:14
+msgid "otp"
+msgstr "رمز التحقق"
+
+#: apps/authentication/models.py:15
+msgid "otp expires at"
+msgstr "وقت انتهاء رمز التحقق"
+
+#: apps/authentication/models.py:16 apps/authentication/models.py:32
+#: apps/store/models.py:11 apps/store/models.py:33 apps/store/models.py:72
+msgid "created at"
+msgstr "تاريخ الإنشاء"
+
+#: apps/authentication/models.py:17 apps/authentication/models.py:33
+#: apps/store/models.py:12 apps/store/models.py:34 apps/store/models.py:73
+msgid "updated at"
+msgstr "تاريخ التحديث"
+
+#: apps/authentication/models.py:23
+msgid "authenticated user"
+msgstr "مستخدم موثق"
+
+#: apps/authentication/models.py:24
+msgid "authenticated users"
+msgstr "المستخدمون الموثقون"
+
+#: apps/authentication/models.py:31
+msgid "session key"
+msgstr "مفتاح الجلسة"
+
+#: apps/authentication/models.py:44
+msgid "anonymous user"
+msgstr "مستخدم مجهول"
+
+#: apps/authentication/models.py:45
+msgid "anonymous users"
+msgstr "المستخدمون المجهولون"
+
+#: apps/authentication/admin.py:19
+msgid "Personal info"
+msgstr "المعلومات الشخصية"
+
+#: apps/authentication/admin.py:20
+msgid "OTP"
+msgstr "رمز التحقق"
+
+#: apps/authentication/admin.py:22
+msgid "Permissions"
+msgstr "الصلاحيات"
+
+#: apps/authentication/admin.py:34
+msgid "Important dates"
+msgstr "التواريخ المهمة"
+
+#: apps/authentication/authentication.py:20
+msgid "Invalid anonymous token."
+msgstr "الرمز المجهول غير صالح."
+
+#: apps/authentication/serializers.py:23 apps/authentication/serializers.py:55
+msgid "Phone number not found"
+msgstr "رقم الهاتف غير موجود"
+
+#: apps/authentication/serializers.py:26
+msgid "Invalid password."
+msgstr "كلمة المرور غير صحيحة."
+
+#: apps/authentication/serializers.py:53
+msgid "Invalid action"
+msgstr "الإجراء غير صالح"
+
+#: apps/authentication/serializers.py:58
+msgid "Invalid OTP"
+msgstr "رمز التحقق غير صالح"
+
+#: apps/authentication/serializers.py:65
+msgid "OTP has expired"
+msgstr "انتهت صلاحية رمز التحقق"
+
+#: apps/authentication/serializers.py:89
+msgid "Phone number does not match authenticated user"
+msgstr "رقم الهاتف لا يطابق المستخدم المصادق عليه"
+
+#: apps/authentication/serializers.py:93 apps/authentication/serializers.py:125
+msgid "Passwords do not match"
+msgstr "كلمتا المرور غير متطابقتين"
+
+#: apps/authentication/serializers.py:131
+msgid "Old password is incorrect"
+msgstr "كلمة المرور القديمة غير صحيحة"
+
+#: apps/authentication/serializers.py:158
+msgid "Invalid refresh token"
+msgstr "رمز التحديث غير صالح"
+
+#: apps/authentication/serializers.py:175
+msgid "Password is incorrect"
+msgstr "كلمة المرور غير صحيحة"
+
+#: apps/authentication/serializers.py:219
+msgid "This field is required."
+msgstr "هذا الحقل مطلوب."
+
+#: apps/authentication/serializers.py:234 apps/authentication/serializers.py:261
+#: apps/authentication/serializers.py:277
+msgid "Email already exists"
+msgstr "البريد الإلكتروني موجود بالفعل"
+
+#: apps/authentication/serializers.py:248
+msgid "Phone number already exists and active"
+msgstr "رقم الهاتف موجود بالفعل ومفعّل"
+
+#: apps/authentication/serializers.py:255
+msgid "Phone number already exists but not active"
+msgstr "رقم الهاتف موجود بالفعل لكنه غير مفعّل"
+
+#: apps/authentication/managers.py:8
+msgid "The phone number must be set"
+msgstr "يجب إدخال رقم الهاتف"
+
+#: apps/authentication/managers.py:25
+msgid "Superuser must have is_staff=True."
+msgstr "يجب أن تكون قيمة is_staff=True للمستخدم المشرف."
+
+#: apps/authentication/managers.py:27
+msgid "Superuser must have is_superuser=True."
+msgstr "يجب أن تكون قيمة is_superuser=True للمستخدم المشرف."
+
+#: apps/authentication/views.py:52
+msgid "Login successful"
+msgstr "تم تسجيل الدخول بنجاح"
+
+#: apps/authentication/views.py:76
+msgid "OTP verified"
+msgstr "تم التحقق من رمز التحقق"
+
+#: apps/authentication/views.py:93
+msgid "Password reset successfully"
+msgstr "تمت إعادة تعيين كلمة المرور بنجاح"
+
+#: apps/authentication/views.py:119
+msgid "Password changed successfully"
+msgstr "تم تغيير كلمة المرور بنجاح"
+
+#: apps/authentication/views.py:134
+msgid "Logout successful"
+msgstr "تم تسجيل الخروج بنجاح"
+
+#: apps/authentication/views.py:151
+msgid "Account deleted successfully"
+msgstr "تم حذف الحساب بنجاح"
+
+#: apps/authentication/utils.py:25
+msgid "Phone number is required"
+msgstr "رقم الهاتف مطلوب"
+
+#: apps/authentication/utils.py:35
+msgid "User not found"
+msgstr "المستخدم غير موجود"
+
+#: apps/authentication/utils.py:39 apps/authentication/utils.py:48
+msgid "OTP sent"
+msgstr "تم إرسال رمز التحقق"
+
+#: apps/authentication/utils.py:45
+msgid "Registration successful, OTP sent"
+msgstr "تم التسجيل بنجاح، وتم إرسال رمز التحقق"
+
+#: apps/store/models.py:8 apps/store/models.py:23 apps/store/models.py:54
+msgid "title"
+msgstr "العنوان"
+
+#: apps/store/models.py:9
+msgid "subtitle"
+msgstr "العنوان الفرعي"
+
+#: apps/store/models.py:10 apps/store/models.py:24 apps/store/models.py:55
+msgid "image"
+msgstr "الصورة"
+
+#: apps/store/models.py:15
+msgid "ad"
+msgstr "إعلان"
+
+#: apps/store/models.py:16
+msgid "ads"
+msgstr "الإعلانات"
+
+#: apps/store/models.py:31
+msgid "parent"
+msgstr "التصنيف الأب"
+
+#: apps/store/models.py:40 apps/store/models.py:52
+msgid "category"
+msgstr "التصنيف"
+
+#: apps/store/models.py:41
+msgid "categories"
+msgstr "التصنيفات"
+
+#: apps/store/models.py:56
+msgid "description"
+msgstr "الوصف"
+
+#: apps/store/models.py:58
+msgid "quantity"
+msgstr "الكمية"
+
+#: apps/store/models.py:64
+msgid "default price"
+msgstr "السعر الافتراضي"
+
+#: apps/store/models.py:70
+msgid "newest"
+msgstr "الأحدث"
+
+#: apps/store/models.py:71
+msgid "best seller"
+msgstr "الأكثر مبيعًا"
+
+#: apps/store/models.py:76
+msgid "product"
+msgstr "المنتج"
+
+#: apps/store/models.py:77
+msgid "products"
+msgstr "المنتجات"
