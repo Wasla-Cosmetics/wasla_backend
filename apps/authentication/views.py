@@ -17,8 +17,8 @@ from apps.authentication.serializers import (
     AuthenticatedUserSerializer,
     AnonymousUserSerializer,
 )
+from apps.core.responses import build_response
 from apps.authentication.utils import (
-    custom_response,
     handle_otp_for_user,
     generate_successful_auth_response,
 )
@@ -88,7 +88,7 @@ class ResetPasswordView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        response = custom_response(
+        response = build_response(
             status_code=status.HTTP_200_OK,
             message=_("Password reset successfully"),
             data={},
@@ -114,7 +114,7 @@ class ChangePasswordView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        response = custom_response(
+        response = build_response(
             status_code=status.HTTP_200_OK,
             message=_("Password changed successfully"),
             data={},
@@ -130,8 +130,8 @@ class LogoutView(APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        response = custom_response(
-            status_code=status.HTTP_200_OK, message=_("Logout successful"), data={}
+        response = build_response(
+            status_code=status.HTTP_200_OK, message=_("Logout successful"), data={},
         )
         return Response(response, status=response["status"])
 
@@ -146,7 +146,7 @@ class DeleteAccountView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        response = custom_response(
+        response = build_response(
             status_code=status.HTTP_200_OK,
             message=_("Account deleted successfully"),
             data={},

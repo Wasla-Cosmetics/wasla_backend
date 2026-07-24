@@ -30,10 +30,13 @@ class StoreApiTests(APITestCase):
         response = self.client.get(reverse("ads-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["count"], 2)
-        self.assertEqual(response.data["results"][0]["title"], "Natural Beauty")
+        self.assertEqual(response.data["status"], status.HTTP_200_OK)
+        self.assertEqual(response.data["message"], "Success")
+        self.assertEqual(response.data["errors"], {})
+        self.assertEqual(response.data["pagination"]["count"], 2)
+        self.assertEqual(response.data["data"][0]["title"], "Natural Beauty")
         self.assertEqual(
-            set(response.data["results"][0].keys()),
+            set(response.data["data"][0].keys()),
             {"id", "title", "subtitle", "image"},
         )
 
@@ -47,7 +50,7 @@ class StoreApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         child = next(
-            item for item in response.data["results"] if item["title"] == "Skin Care"
+            item for item in response.data["data"] if item["title"] == "Skin Care"
         )
         self.assertEqual(child["parent"], parent.id)
 
@@ -69,7 +72,7 @@ class StoreApiTests(APITestCase):
         response = self.client.get(reverse("products-list"))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        product = response.data["results"][0]
+        product = response.data["data"][0]
         self.assertEqual(product["default_price"], Decimal("150.00"))
         self.assertNotIn("price", product)
 
@@ -88,5 +91,6 @@ class StoreApiTests(APITestCase):
         response = self.client.get(reverse("products-list"), {"is_paginated": "false"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
-        self.assertEqual(response.data[0]["title"], "Cleanser")
+        self.assertIsInstance(response.data["data"], list)
+        self.assertIsNone(response.data["pagination"])
+        self.assertEqual(response.data["data"][0]["title"], "Cleanser")

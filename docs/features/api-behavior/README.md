@@ -3,6 +3,34 @@
 Shared API behavior is configured in `project/settings/local.py` through
 `REST_FRAMEWORK`.
 
+## Response Envelope
+
+DRF API responses use one shared top-level shape:
+
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "data": {},
+  "errors": {},
+  "pagination": null
+}
+```
+
+Validation and API errors keep the same shape:
+
+```json
+{
+  "status": 400,
+  "message": "Validation error",
+  "data": {},
+  "errors": {
+    "phone": "This field is required."
+  },
+  "pagination": null
+}
+```
+
 ## Pagination
 
 List endpoints use `apps.core.pagination.OptionalPageNumberPagination`.
@@ -17,10 +45,18 @@ Response shape:
 
 ```json
 {
-  "count": 25,
-  "next": "http://localhost:8000/api/store/products/?page=2",
-  "previous": null,
-  "results": []
+  "status": 200,
+  "message": "Success",
+  "data": [],
+  "errors": {},
+  "pagination": {
+    "count": 25,
+    "next": "http://localhost:8000/api/store/products/?page=2",
+    "previous": null,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 3
+  }
 }
 ```
 
@@ -51,16 +87,23 @@ Accepted disabled values:
 - `no`
 - `off`
 
-When pagination is disabled, the response is a direct list:
+When pagination is disabled, the list is returned in `data` and `pagination`
+is `null`:
 
 ```json
-[
-  {
-    "id": 1,
-    "title": "Cleanser",
-    "default_price": 150.0
-  }
-]
+{
+  "status": 200,
+  "message": "Success",
+  "data": [
+    {
+      "id": 1,
+      "title": "Cleanser",
+      "default_price": 150.0
+    }
+  ],
+  "errors": {},
+  "pagination": null
+}
 ```
 
 Do not combine `page` with `is_paginated=false`; disabling pagination ignores

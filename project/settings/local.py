@@ -76,6 +76,7 @@ BUILT_IN_MIDDLEWARE = [
 
 LOCAL_MIDDLEWARE = [
     "project.middlewares.TokenAuthMiddleware",
+    "project.middlewares.UnifiedAPIResponseMiddleware",
 ]
 
 MIDDLEWARE = BUILT_IN_MIDDLEWARE + LOCAL_MIDDLEWARE

@@ -32,6 +32,9 @@ class AuthenticationApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["status"], status.HTTP_201_CREATED)
+        self.assertEqual(response.data["errors"], {})
+        self.assertIsNone(response.data["pagination"])
 
         user = self.user_model.objects.get(phone="+201000000001")
         self.assertFalse(user.is_active)
@@ -92,6 +95,9 @@ class AuthenticationApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["status"], status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"], "Validation error")
+        self.assertIn("otp", response.data["errors"])
 
         user.refresh_from_db()
         self.assertFalse(user.is_active)
@@ -127,6 +133,9 @@ class AuthenticationApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["status"], status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"], "Validation error")
+        self.assertIn("phone", response.data["errors"])
 
         other_user.refresh_from_db()
         self.assertTrue(other_user.check_password("NileBridgePass123!"))
@@ -165,8 +174,11 @@ class AnonymousUserApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(AnonymousUser.objects.count(), 1)
         self.assertEqual(
-            response.data["session_key"], AnonymousUser.objects.get().session_key
+            response.data["data"]["session_key"],
+            AnonymousUser.objects.get().session_key,
         )
+        self.assertEqual(response.data["errors"], {})
+        self.assertIsNone(response.data["pagination"])
 
 
 class TokenAuthMiddlewareTests(APITestCase):

@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from rest_framework.views import exception_handler
-from rest_framework import status
+
+from apps.core.responses import build_response, extract_error_payload
 
 
 def flatten_errors(errors):
@@ -28,7 +29,14 @@ def flatten_errors(errors):
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
 
-    if response and response.status_code == status.HTTP_400_BAD_REQUEST:
-        response.data = flatten_errors(response.data)
+    if response:
+        errors = flatten_errors(response.data)
+        message, errors = extract_error_payload(errors, response.status_code)
+        response.data = build_response(
+            status_code=response.status_code,
+            message=message,
+            data={},
+            errors=errors,
+        )
 
     return response

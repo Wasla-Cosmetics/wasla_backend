@@ -6,12 +6,9 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+from apps.core.responses import build_response
 from apps.authentication.models import AuthenticatedUser
 from apps.authentication.serializers import AuthenticatedUserSerializer
-
-
-def custom_response(status_code, message, data):
-    return {"status": status_code, "message": message, "data": data}
 
 
 def generate_otp():
@@ -20,7 +17,7 @@ def generate_otp():
 
 def handle_otp_for_user(phone, action):
     if not phone:
-        return custom_response(
+        return build_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=_("Phone number is required"),
             data={},
@@ -30,7 +27,7 @@ def handle_otp_for_user(phone, action):
     user = AuthenticatedUser.objects.filter(phone=phone).first()
 
     if not user:
-        return custom_response(
+        return build_response(
             status_code=status.HTTP_404_NOT_FOUND,
             message=_("User not found"),
             data={},
@@ -56,7 +53,7 @@ def handle_otp_for_user(phone, action):
     )
     user.save(update_fields=["otp", "otp_expires_at"])
 
-    return custom_response(status_code=status_code, message=message_status, data=data)
+    return build_response(status_code=status_code, message=message_status, data=data)
 
 
 def generate_successful_auth_response(user, message, request):
@@ -69,4 +66,4 @@ def generate_successful_auth_response(user, message, request):
         "user": user_data,
     }
 
-    return custom_response(status_code=status.HTTP_200_OK, message=message, data=data)
+    return build_response(status_code=status.HTTP_200_OK, message=message, data=data)
