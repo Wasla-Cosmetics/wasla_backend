@@ -1,8 +1,8 @@
 from rest_framework.response import Response
 
 from apps.authentication.tokens import (
-    get_anonymous_token,
-    get_anonymous_user,
+    get_guest_token,
+    get_guest_user,
     get_authenticated_user,
     get_bearer_token,
 )
@@ -20,13 +20,13 @@ class TokenAuthMiddleware:
         if auth_token and not auth_user:
             return self.get_response(request)
 
-        anon_token = None if auth_user else get_anonymous_token(request)
-        anon_user = get_anonymous_user(anon_token)
+        guest_token = None if auth_user else get_guest_token(request)
+        guest_user = get_guest_user(guest_token)
 
         if auth_user:
             request.user = auth_user
-        elif anon_user:
-            request.user = anon_user
+        elif guest_user:
+            request.user = guest_user
 
         return self.get_response(request)
 

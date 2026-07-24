@@ -1,12 +1,14 @@
+from uuid import uuid4
+
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import serializers
-from uuid import uuid4
-from apps.authentication.models import AuthenticatedUser, AnonymousUser
+
+from apps.authentication.models import GuestUser, User
 
 
 class LoginSerializer(serializers.Serializer):
@@ -18,8 +20,8 @@ class LoginSerializer(serializers.Serializer):
         password = data.get("password")
 
         try:
-            user = AuthenticatedUser.objects.get(phone=phone)
-        except AuthenticatedUser.DoesNotExist:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
             raise serializers.ValidationError({"phone": _("Phone number not found")})
 
         if not user.check_password(password):
@@ -46,12 +48,12 @@ class VerifyOtpSerializer(serializers.Serializer):
 
         try:
             if action == "register":
-                user = AuthenticatedUser.objects.get(phone=phone, is_active=False)
+                user = User.objects.get(phone=phone, is_active=False)
             elif action == "reset-password":
-                user = AuthenticatedUser.objects.get(phone=phone, is_active=True)
+                user = User.objects.get(phone=phone, is_active=True)
             else:
                 raise serializers.ValidationError({"action": _("Invalid action")})
-        except AuthenticatedUser.DoesNotExist:
+        except User.DoesNotExist:
             raise serializers.ValidationError({"phone": _("Phone number not found")})
 
         if not user.otp or user.otp != otp:
@@ -86,7 +88,7 @@ class ResetPasswordSerializer(serializers.Serializer):
 
         if phone and phone != user.phone:
             raise serializers.ValidationError(
-                {"phone": _("Phone number does not match authenticated user")}
+                {"phone": _("Phone number does not match user")}
             )
 
         if password != confirm_password:
@@ -182,33 +184,33 @@ class DeleteAccountSerializer(serializers.Serializer):
         return user
 
 
-class AuthenticatedUserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=False, trim_whitespace=False
     )
     cash_back = serializers.SerializerMethodField()
 
     class Meta:
-        model = AuthenticatedUser
+        model = User
         fields = [
             "id",
             "phone",
             "email",
             "password",
             "full_name",
-            "points",
+            "reward_points",
             "cash_back",
         ]
         extra_kwargs = {
             "phone": {"validators": []},
             "email": {"validators": []},
-            "points": {"read_only": True},
+            "reward_points": {"read_only": True},
             "cash_back": {"read_only": True},
         }
 
     @staticmethod
     def get_cash_back(obj):
-        return obj.points // 1000
+        return obj.reward_points // 1000
 
     def validate(self, attrs):
         password = attrs.get("password")
@@ -226,7 +228,7 @@ class AuthenticatedUserSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"password": list(exc.messages)})
 
         if email:
-            users = AuthenticatedUser.objects.filter(email=email)
+            users = User.objects.filter(email=email)
             if self.instance is not None:
                 users = users.exclude(pk=self.instance.pk)
 
@@ -239,7 +241,7 @@ class AuthenticatedUserSerializer(serializers.ModelSerializer):
         phone = validated_data.get("phone")
         email = validated_data.get("email")
 
-        user = AuthenticatedUser.objects.filter(phone=phone).first()
+        user = User.objects.filter(phone=phone).first()
 
         if user:
             if user.is_active:
@@ -257,12 +259,12 @@ class AuthenticatedUserSerializer(serializers.ModelSerializer):
                     }
                 )
 
-        if AuthenticatedUser.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).exists():
             raise serializers.ValidationError({"email": _("Email already exists")})
 
         validated_data["phone"] = phone
         validated_data["email"] = email
-        return AuthenticatedUser.objects.create_user(**validated_data)
+        return User.objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
 
@@ -270,7 +272,7 @@ class AuthenticatedUserSerializer(serializers.ModelSerializer):
             email = validated_data["email"]
 
             if (
-                AuthenticatedUser.objects.exclude(pk=instance.pk)
+                User.objects.exclude(pk=instance.pk)
                 .filter(email=email)
                 .exists()
             ):
@@ -285,9 +287,9 @@ class AuthenticatedUserSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class AnonymousUserSerializer(serializers.ModelSerializer):
+class GuestUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AnonymousUser
+        model = GuestUser
         fields = ["id", "session_key"]
         extra_kwargs = {
             "session_key": {"read_only": True},
@@ -295,4 +297,4 @@ class AnonymousUserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         session_key = str(uuid4())
-        return AnonymousUser.objects.create(session_key=session_key)
+        return GuestUser.objects.create(session_key=session_key)

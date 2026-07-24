@@ -1,9 +1,14 @@
-from apps.core.permissions import IsAdminOrReadOnly
+from apps.core.permissions import IsAdminOrReadOnly, IsReviewOwnerOrAdminOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 
-from apps.store.models import Ad, Category, Product
-from apps.store.serializers import AdSerializer, CategorySerializer, ProductSerializer
+from apps.store.models import Ad, Category, Product, ProductReview
+from apps.store.serializers import (
+    AdSerializer,
+    CategorySerializer,
+    ProductReviewSerializer,
+    ProductSerializer,
+)
 from apps.store.filters import ProductFilter
 
 
@@ -25,3 +30,14 @@ class ProductViewSet(ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProductFilter
+
+
+class ProductReviewViewSet(ModelViewSet):
+    queryset = ProductReview.objects.select_related("product", "user")
+    serializer_class = ProductReviewSerializer
+    permission_classes = [IsReviewOwnerOrAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["product", "user"]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

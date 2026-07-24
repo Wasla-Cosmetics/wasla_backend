@@ -2,9 +2,9 @@ from django.conf import settings
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken
 
-from apps.authentication.models import AnonymousUser, AuthenticatedUser
+from apps.authentication.models import GuestUser, User
 
-ANONYMOUS_TOKEN_HEADER = "X-Anonymous-Token"
+GUEST_TOKEN_HEADER = "X-Guest-Token"
 
 
 def get_bearer_token(request):
@@ -17,8 +17,8 @@ def get_bearer_token(request):
     return None
 
 
-def get_anonymous_token(request):
-    return request.headers.get(ANONYMOUS_TOKEN_HEADER)
+def get_guest_token(request):
+    return request.headers.get(GUEST_TOKEN_HEADER)
 
 
 def get_authenticated_user(token):
@@ -27,21 +27,23 @@ def get_authenticated_user(token):
 
     try:
         access_token = AccessToken(token)
-        user_id = access_token.get(settings.SIMPLE_JWT.get("USER_ID_CLAIM", "user_id"))
+        user_id = access_token.get(
+            settings.SIMPLE_JWT.get("USER_ID_CLAIM", "user_id")
+        )
     except TokenError:
         return None
 
     try:
-        return AuthenticatedUser.objects.get(id=user_id, is_active=True)
-    except AuthenticatedUser.DoesNotExist:
+        return User.objects.get(id=user_id, is_active=True)
+    except User.DoesNotExist:
         return None
 
 
-def get_anonymous_user(token):
+def get_guest_user(token):
     if not token:
         return None
 
     try:
-        return AnonymousUser.objects.get(session_key=token)
-    except AnonymousUser.DoesNotExist:
+        return GuestUser.objects.get(session_key=token)
+    except GuestUser.DoesNotExist:
         return None

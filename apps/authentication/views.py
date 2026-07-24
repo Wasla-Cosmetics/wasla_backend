@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
-from apps.authentication.models import AuthenticatedUser, AnonymousUser
+from apps.authentication.models import User, GuestUser
 from apps.authentication.serializers import (
     LoginSerializer,
     VerifyOtpSerializer,
@@ -14,8 +14,8 @@ from apps.authentication.serializers import (
     ChangePasswordSerializer,
     LogoutSerializer,
     DeleteAccountSerializer,
-    AuthenticatedUserSerializer,
-    AnonymousUserSerializer,
+    UserSerializer,
+    GuestUserSerializer,
 )
 from apps.core.responses import build_response
 from apps.authentication.utils import (
@@ -25,7 +25,7 @@ from apps.authentication.utils import (
 
 
 class RegisterView(APIView):
-    serializer_class = AuthenticatedUserSerializer
+    serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -97,7 +97,7 @@ class ResetPasswordView(APIView):
 
 
 class UserProfileView(RetrieveUpdateAPIView):
-    serializer_class = AuthenticatedUserSerializer
+    serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
@@ -154,15 +154,15 @@ class DeleteAccountView(APIView):
         return Response(response, status=response["status"])
 
 
-class AuthenticatedUserViewSet(ModelViewSet):
-    queryset = AuthenticatedUser.objects.all()
-    serializer_class = AuthenticatedUserSerializer
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["phone"]
 
 
-class AnonymousUserCreateView(CreateAPIView):
-    queryset = AnonymousUser.objects.all()
-    serializer_class = AnonymousUserSerializer
+class GuestUserCreateView(CreateAPIView):
+    queryset = GuestUser.objects.all()
+    serializer_class = GuestUserSerializer
     permission_classes = [AllowAny]
