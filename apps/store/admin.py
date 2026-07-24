@@ -2,7 +2,7 @@ from django.contrib import admin
 from mptt.admin import DraggableMPTTAdmin
 from modeltranslation.admin import TranslationAdmin
 
-from apps.store.models import Ad, Category, Product
+from apps.store.models import Ad, Category, Product, ProductReview
 
 
 class DraggableTranslationAdmin(TranslationAdmin, DraggableMPTTAdmin):
@@ -29,10 +29,18 @@ class ProductAdmin(TranslationAdmin):
         "title",
         "category",
         "default_price",
-        "quantity",
-        "points",
+        "stock_quantity",
+        "reward_points",
         "is_newest",
         "is_best_seller",
     )
     list_filter = ("category", "is_newest", "is_best_seller")
     search_fields = ("title", "description")
+
+
+@admin.register(ProductReview)
+class ProductReviewAdmin(admin.ModelAdmin):
+    list_display = ("product", "user", "rating", "created_at", "updated_at")
+    list_filter = ("rating", "created_at")
+    search_fields = ("product__title", "user__phone", "user__full_name", "description")
+    readonly_fields = ("created_at", "updated_at")

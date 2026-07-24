@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from project.middlewares import TokenAuthMiddleware
 
-from .models import AnonymousUser
+from .models import GuestUser
 
 
 class AuthenticationApiTests(APITestCase):
@@ -167,15 +167,15 @@ class AuthenticationApiTests(APITestCase):
         self.assertTrue(user.check_password("NewStrongPass123!"))
 
 
-class AnonymousUserApiTests(APITestCase):
-    def test_create_anonymous_user_returns_session_key(self):
-        response = self.client.post(reverse("anonymous-users"), {}, format="json")
+class GuestUserApiTests(APITestCase):
+    def test_create_guest_user_returns_session_key(self):
+        response = self.client.post(reverse("guest-users"), {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(AnonymousUser.objects.count(), 1)
+        self.assertEqual(GuestUser.objects.count(), 1)
         self.assertEqual(
             response.data["data"]["session_key"],
-            AnonymousUser.objects.get().session_key,
+            GuestUser.objects.get().session_key,
         )
         self.assertEqual(response.data["errors"], {})
         self.assertIsNone(response.data["pagination"])
@@ -205,21 +205,21 @@ class TokenAuthMiddlewareTests(APITestCase):
 
         self.assertEqual(response.user, user)
 
-    def test_sets_request_user_from_anonymous_token(self):
-        anonymous_user = AnonymousUser.objects.create(session_key="anonymous-session")
+    def test_sets_request_user_from_guest_token(self):
+        guest_user = GuestUser.objects.create(session_key="guest-session")
         request = self.factory.get(
             "/",
-            HTTP_X_ANONYMOUS_TOKEN=anonymous_user.session_key,
+            HTTP_X_GUEST_TOKEN=guest_user.session_key,
         )
 
         response = self.middleware(request)
 
-        self.assertEqual(response.user, anonymous_user)
+        self.assertEqual(response.user, guest_user)
 
 
 class HeaderTokenAuthenticationTests(APITestCase):
-    def test_drf_request_user_can_be_anonymous_user(self):
-        anonymous_user = AnonymousUser.objects.create(session_key="anonymous-session")
+    def test_drf_request_user_can_be_guest_user(self):
+        guest_user = GuestUser.objects.create(session_key="guest-session")
 
         class UserEchoView(APIView):
             def get(self, request):
@@ -232,9 +232,9 @@ class HeaderTokenAuthenticationTests(APITestCase):
 
         request = APIRequestFactory().get(
             "/",
-            HTTP_X_ANONYMOUS_TOKEN=anonymous_user.session_key,
+            HTTP_X_GUEST_TOKEN=guest_user.session_key,
         )
         response = UserEchoView.as_view()(request)
 
-        self.assertEqual(response.data["user_id"], anonymous_user.id)
+        self.assertEqual(response.data["user_id"], guest_user.id)
         self.assertTrue(response.data["is_anonymous"])

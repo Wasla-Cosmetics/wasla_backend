@@ -37,8 +37,8 @@ Catalog product model:
 - `title`
 - `image`
 - `description`
-- `quantity`
-- `points`
+- `stock_quantity`
+- `reward_points`
 - `default_price`
 - `is_newest`
 - `is_best_seller`
@@ -46,6 +46,19 @@ Catalog product model:
 - `updated_at`
 
 Products are ordered by `title`.
+
+### ProductReview
+
+Customer review for a product:
+
+- `product`
+- `user`
+- `rating` from 1 to 5
+- `description`
+- `created_at`
+- `updated_at`
+
+Each user can review a product once.
 
 ## API Routes
 
@@ -61,9 +74,13 @@ Available viewsets:
 GET /api/store/ads/
 GET /api/store/categories/
 GET /api/store/products/
+GET /api/store/reviews/
+POST /api/store/reviews/
 ```
 
 Write operations require admin permissions. Read operations are public.
+Review reads are public, but creating a review requires a user.
+Updating or deleting a review is limited to the review owner or admin users.
 
 ## Filtering
 

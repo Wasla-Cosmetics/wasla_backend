@@ -6,8 +6,8 @@ from .views import (
     ChangePasswordView,
     ResetPasswordView,
     DeleteAccountView,
-    AuthenticatedUserViewSet,
-    AnonymousUserCreateView,
+    UserViewSet,
+    GuestUserCreateView,
     UserProfileView,
     SendOtpView,
     VerifyOtpView,
@@ -16,9 +16,9 @@ from .views import (
 
 router = DefaultRouter()
 router.register(
-    "authenticated-users",
-    AuthenticatedUserViewSet,
-    basename="authenticated-users",
+    "users",
+    UserViewSet,
+    basename="users",
 )
 
 urlpatterns = [
@@ -32,5 +32,5 @@ urlpatterns = [
     path("change-password/", ChangePasswordView.as_view(), name="change_password"),
     path("delete-account/", DeleteAccountView.as_view(), name="delete-account"),
     path("logout/", LogoutView.as_view(), name="logout"),
-    path("anonymous-users/", AnonymousUserCreateView.as_view(), name="anonymous-users"),
+    path("guest-users/", GuestUserCreateView.as_view(), name="guest-users"),
 ]

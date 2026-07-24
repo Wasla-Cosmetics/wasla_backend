@@ -177,7 +177,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-AUTH_USER_MODEL = "authentication.AuthenticatedUser"
+AUTH_USER_MODEL = "authentication.User"
 AUTH_OTP_TTL_MINUTES = int(env.get("AUTH_OTP_TTL_MINUTES", "10"))
 
 REST_FRAMEWORK = {

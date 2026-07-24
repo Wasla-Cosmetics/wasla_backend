@@ -4,11 +4,12 @@ from secrets import randbelow
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from apps.authentication.models import User
+from apps.authentication.serializers import UserSerializer
 from apps.core.responses import build_response
-from apps.authentication.models import AuthenticatedUser
-from apps.authentication.serializers import AuthenticatedUserSerializer
 
 
 def generate_otp():
@@ -24,7 +25,7 @@ def handle_otp_for_user(phone, action):
         )
 
     otp = generate_otp()
-    user = AuthenticatedUser.objects.filter(phone=phone).first()
+    user = User.objects.filter(phone=phone).first()
 
     if not user:
         return build_response(
@@ -58,7 +59,7 @@ def handle_otp_for_user(phone, action):
 
 def generate_successful_auth_response(user, message, request):
     refresh = RefreshToken.for_user(user)
-    user_data = AuthenticatedUserSerializer(user, context={"request": request}).data
+    user_data = UserSerializer(user, context={"request": request}).data
 
     data = {
         "refresh": str(refresh),
