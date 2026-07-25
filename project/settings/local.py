@@ -5,7 +5,6 @@ from datetime import timedelta
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -163,8 +162,8 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en-us"
 
 LANGUAGES = [
-    ("en", _("English")),
-    ("ar", _("Arabic")),
+    ("en", "English"),
+    ("ar", "Arabic"),
 ]
 
 LOCALE_PATHS = [
