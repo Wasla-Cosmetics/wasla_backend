@@ -110,12 +110,11 @@ DATABASE_URL = env.get("DATABASE_URL")
 DATABASE_TYPE = env.get("DATABASE_TYPE", "sqlite3").strip().lower()
 
 if DATABASE_URL:
+    database_config = dj_database_url.parse(DATABASE_URL)
+    database_config["CONN_MAX_AGE"] = 600
+    database_config["CONN_HEALTH_CHECKS"] = True
     DATABASES = {
-        "default": dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        "default": database_config,
     }
 elif DATABASE_TYPE == "sqlite3":
     sqlite_name = Path(env.get("SQLITE_NAME", "db.sqlite3"))
