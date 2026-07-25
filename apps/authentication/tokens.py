@@ -27,9 +27,7 @@ def get_authenticated_user(token):
 
     try:
         access_token = AccessToken(token)
-        user_id = access_token.get(
-            settings.SIMPLE_JWT.get("USER_ID_CLAIM", "user_id")
-        )
+        user_id = access_token.get(settings.SIMPLE_JWT.get("USER_ID_CLAIM", "user_id"))
     except TokenError:
         return None
 

@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
 from os import environ as env
+from datetime import timedelta
+
+import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
-from datetime import timedelta
-from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -65,6 +67,7 @@ INSTALLED_APPS = MODELTRANSLATION_APPS + BUILT_IN_APPS + THIRD_PARTY_APPS + LOCA
 
 BUILT_IN_MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -104,10 +107,19 @@ WSGI_APPLICATION = "project.wsgi.application"
 ASGI_APPLICATION = "project.asgi.application"
 
 # Database
-DATABASE_TYPE = env["DATABASE_TYPE"]
+DATABASE_URL = env.get("DATABASE_URL")
+DATABASE_TYPE = env.get("DATABASE_TYPE", "sqlite3").strip().lower()
 
-if DATABASE_TYPE == "sqlite3":
-    sqlite_name = Path(env["SQLITE_NAME"])
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif DATABASE_TYPE == "sqlite3":
+    sqlite_name = Path(env.get("SQLITE_NAME", "db.sqlite3"))
     if not sqlite_name.is_absolute():
         sqlite_name = BASE_DIR / sqlite_name
 
@@ -170,8 +182,16 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_URL = env.get("STATIC_URL", "/static/")
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files
 MEDIA_URL = "media/"

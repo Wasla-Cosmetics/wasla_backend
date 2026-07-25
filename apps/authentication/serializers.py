@@ -271,11 +271,7 @@ class UserSerializer(serializers.ModelSerializer):
         if "email" in validated_data:
             email = validated_data["email"]
 
-            if (
-                User.objects.exclude(pk=instance.pk)
-                .filter(email=email)
-                .exists()
-            ):
+            if User.objects.exclude(pk=instance.pk).filter(email=email).exists():
                 raise serializers.ValidationError({"email": _("Email already exists")})
 
         if "phone" in validated_data:
