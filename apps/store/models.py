@@ -8,7 +8,12 @@ from mptt.models import MPTTModel, TreeForeignKey
 class Ad(models.Model):
     title = models.CharField(_("title"), max_length=200)
     subtitle = models.TextField(_("subtitle"), blank=True)
-    image = models.ImageField(_("image"), upload_to="ads/")
+    image = models.ImageField(
+        _("image"),
+        upload_to="ads/",
+        default="default.jpeg",
+        blank=True,
+    )
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
@@ -22,7 +27,12 @@ class Ad(models.Model):
 
 class Category(MPTTModel):
     title = models.CharField(_("title"), max_length=255)
-    image = models.ImageField(_("image"), upload_to="categories/")
+    image = models.ImageField(
+        _("image"),
+        upload_to="categories/",
+        default="default.jpeg",
+        blank=True,
+    )
     parent = TreeForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -53,7 +63,12 @@ class Product(models.Model):
         verbose_name=_("category"),
     )
     title = models.CharField(_("title"), max_length=255)
-    image = models.ImageField(_("image"), upload_to="products/")
+    image = models.ImageField(
+        _("image"),
+        upload_to="products/",
+        default="default.jpeg",
+        blank=True,
+    )
     description = models.TextField(_("description"))
     stock_quantity = models.PositiveIntegerField(
         _("stock quantity"), default=0, validators=[MinValueValidator(0)]
