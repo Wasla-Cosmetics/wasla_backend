@@ -42,13 +42,11 @@ services:
     restart: on-failure
     command: >
       bash -c "
-      python manage.py compilemessages --ignore '.venv/*' --verbosity 0 &&
       python manage.py collectstatic --no-input &&
       python manage.py migrate &&
       gunicorn project.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2 --timeout 0 --log-level info --access-logfile - --error-logfile -
       "
     volumes:
-      - .:/django
       - media:/django/media
       - staticfiles:/django/staticfiles
     logging:
