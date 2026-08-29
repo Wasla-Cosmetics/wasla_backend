@@ -2,11 +2,8 @@ import os
 from pathlib import Path
 from os import environ as env
 from django.utils.translation import gettext_lazy as _
-from dotenv import load_dotenv
 from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
-
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
