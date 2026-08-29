@@ -2,11 +2,14 @@
 Settings config
 """
 
-from os import environ as env
+from os import R_OK, access, environ as env
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+dotenv_path = Path(__file__).resolve().parents[2] / ".env"
+if dotenv_path.is_file() and access(dotenv_path, R_OK):
+    load_dotenv(dotenv_path)
 
 env_state = env.get("ENV", "local").strip().lower()
 
