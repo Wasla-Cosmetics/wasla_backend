@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
 from os import environ as env
-from datetime import timedelta
-
-import dj_database_url
-from django.core.exceptions import ImproperlyConfigured
+from django.utils.translation import gettext_lazy as _
 from dotenv import load_dotenv
+from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -66,7 +65,6 @@ INSTALLED_APPS = MODELTRANSLATION_APPS + BUILT_IN_APPS + THIRD_PARTY_APPS + LOCA
 
 BUILT_IN_MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -106,18 +104,10 @@ WSGI_APPLICATION = "project.wsgi.application"
 ASGI_APPLICATION = "project.asgi.application"
 
 # Database
-DATABASE_URL = env.get("DATABASE_URL")
-DATABASE_TYPE = env.get("DATABASE_TYPE", "sqlite3").strip().lower()
+DATABASE_TYPE = env["DATABASE_TYPE"]
 
-if DATABASE_URL:
-    database_config = dj_database_url.parse(DATABASE_URL)
-    database_config["CONN_MAX_AGE"] = 600
-    database_config["CONN_HEALTH_CHECKS"] = True
-    DATABASES = {
-        "default": database_config,
-    }
-elif DATABASE_TYPE == "sqlite3":
-    sqlite_name = Path(env.get("SQLITE_NAME", "db.sqlite3"))
+if DATABASE_TYPE == "sqlite3":
+    sqlite_name = Path(env["SQLITE_NAME"])
     if not sqlite_name.is_absolute():
         sqlite_name = BASE_DIR / sqlite_name
 
@@ -161,8 +151,8 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "en-us"
 
 LANGUAGES = [
-    ("en", "English"),
-    ("ar", "Arabic"),
+    ("en", _("English")),
+    ("ar", _("Arabic")),
 ]
 
 LOCALE_PATHS = [
@@ -180,16 +170,8 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = env.get("STATIC_URL", "/static/")
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Media files
 MEDIA_URL = "media/"

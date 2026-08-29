@@ -1,5 +1,4 @@
 .env
-.vercel/
 .venv/
 .idea/
 __pycache__/
@@ -16,3 +15,4 @@ staticfiles/
 locale/**/LC_MESSAGES/*.mo
 .agents
 .codex
+
