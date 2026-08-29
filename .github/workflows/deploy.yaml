@@ -1,0 +1,203 @@
+name: Deploy
+
+on:
+  push:
+    branches: [dev, stage, master]
+  workflow_dispatch:
+    inputs:
+      git_branch:
+        description: Branch to deploy
+        type: choice
+        required: true
+        default: dev
+        options: [dev, stage, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wasla-backend-${{ inputs.git_branch || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.git_branch || github.ref_name }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.git_branch || github.ref_name }}
+
+    steps:
+      - name: Select deployment configuration
+        env:
+          BRANCH: ${{ inputs.git_branch || github.ref_name }}
+          DEV_DEPLOY_PATH: ${{ vars.DEV_DEPLOY_PATH }}
+          STAGE_DEPLOY_PATH: ${{ vars.STAGE_DEPLOY_PATH }}
+          MASTER_DEPLOY_PATH: ${{ vars.MASTER_DEPLOY_PATH }}
+          DEV_SERVER_NAME: ${{ vars.DEV_SERVER_NAME }}
+          STAGE_SERVER_NAME: ${{ vars.STAGE_SERVER_NAME }}
+          MASTER_SERVER_NAME: ${{ vars.MASTER_SERVER_NAME }}
+          DEV_DJANGO_PORT: ${{ vars.DEV_DJANGO_PORT }}
+          STAGE_DJANGO_PORT: ${{ vars.STAGE_DJANGO_PORT }}
+          MASTER_DJANGO_PORT: ${{ vars.MASTER_DJANGO_PORT }}
+          DEV_POSTGRES_HOST_PORT: ${{ vars.DEV_POSTGRES_HOST_PORT }}
+          STAGE_POSTGRES_HOST_PORT: ${{ vars.STAGE_POSTGRES_HOST_PORT }}
+          MASTER_POSTGRES_HOST_PORT: ${{ vars.MASTER_POSTGRES_HOST_PORT }}
+          DEV_ALLOWED_HOSTS: ${{ vars.DEV_ALLOWED_HOSTS }}
+          STAGE_ALLOWED_HOSTS: ${{ vars.STAGE_ALLOWED_HOSTS }}
+          MASTER_ALLOWED_HOSTS: ${{ vars.MASTER_ALLOWED_HOSTS }}
+          DEV_CSRF_TRUSTED_ORIGINS: ${{ vars.DEV_CSRF_TRUSTED_ORIGINS }}
+          STAGE_CSRF_TRUSTED_ORIGINS: ${{ vars.STAGE_CSRF_TRUSTED_ORIGINS }}
+          MASTER_CSRF_TRUSTED_ORIGINS: ${{ vars.MASTER_CSRF_TRUSTED_ORIGINS }}
+        run: |
+          set -euo pipefail
+          case "$BRANCH" in
+            dev)
+              deploy_path="${DEV_DEPLOY_PATH:-/home/dev/wasla_backend}"
+              server_name="${DEV_SERVER_NAME:-dev_wasla_backend_server}"
+              django_port="${DEV_DJANGO_PORT:-8000}"
+              postgres_host_port="${DEV_POSTGRES_HOST_PORT:-5432}"
+              allowed_hosts="$DEV_ALLOWED_HOSTS"
+              csrf_origins="$DEV_CSRF_TRUSTED_ORIGINS"
+              environment=development
+              ;;
+            stage)
+              deploy_path="${STAGE_DEPLOY_PATH:-/home/stage/wasla_backend}"
+              server_name="${STAGE_SERVER_NAME:-stage_wasla_backend_server}"
+              django_port="${STAGE_DJANGO_PORT:-8000}"
+              postgres_host_port="${STAGE_POSTGRES_HOST_PORT:-5432}"
+              allowed_hosts="$STAGE_ALLOWED_HOSTS"
+              csrf_origins="$STAGE_CSRF_TRUSTED_ORIGINS"
+              environment=staging
+              ;;
+            master)
+              deploy_path="${MASTER_DEPLOY_PATH:-/home/prod/wasla_backend}"
+              server_name="${MASTER_SERVER_NAME:-prod_wasla_backend_server}"
+              django_port="${MASTER_DJANGO_PORT:-8000}"
+              postgres_host_port="${MASTER_POSTGRES_HOST_PORT:-5432}"
+              allowed_hosts="$MASTER_ALLOWED_HOSTS"
+              csrf_origins="$MASTER_CSRF_TRUSTED_ORIGINS"
+              environment=production
+              ;;
+            *) echo "Unsupported branch: $BRANCH" >&2; exit 1 ;;
+          esac
+
+          {
+            echo "GIT_BRANCH=$BRANCH"
+            echo "DEPLOY_PATH=$deploy_path"
+            echo "SERVER_NAME=$server_name"
+            echo "DJANGO_PORT=$django_port"
+            echo "POSTGRES_HOST_PORT=$postgres_host_port"
+            echo "ALLOWED_HOSTS=$allowed_hosts"
+            echo "CSRF_TRUSTED_ORIGINS=$csrf_origins"
+            echo "ENV=$environment"
+          } >> "$GITHUB_ENV"
+
+      - name: Map secrets
+        env:
+          GH_SSH_HOST: ${{ secrets.SSH_HOST }}
+          GH_SSH_PORT: ${{ secrets.SSH_PORT }}
+          GH_SSH_USER: ${{ secrets.SSH_USER }}
+          GH_SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+          GH_DEV_SECRET_KEY: ${{ secrets.DEV_SECRET_KEY }}
+          GH_STAGE_SECRET_KEY: ${{ secrets.STAGE_SECRET_KEY }}
+          GH_MASTER_SECRET_KEY: ${{ secrets.MASTER_SECRET_KEY }}
+          GH_DEV_POSTGRES_DB: ${{ secrets.DEV_POSTGRES_DB }}
+          GH_STAGE_POSTGRES_DB: ${{ secrets.STAGE_POSTGRES_DB }}
+          GH_MASTER_POSTGRES_DB: ${{ secrets.MASTER_POSTGRES_DB }}
+          GH_DEV_POSTGRES_USER: ${{ secrets.DEV_POSTGRES_USER }}
+          GH_STAGE_POSTGRES_USER: ${{ secrets.STAGE_POSTGRES_USER }}
+          GH_MASTER_POSTGRES_USER: ${{ secrets.MASTER_POSTGRES_USER }}
+          GH_DEV_POSTGRES_PASSWORD: ${{ secrets.DEV_POSTGRES_PASSWORD }}
+          GH_STAGE_POSTGRES_PASSWORD: ${{ secrets.STAGE_POSTGRES_PASSWORD }}
+          GH_MASTER_POSTGRES_PASSWORD: ${{ secrets.MASTER_POSTGRES_PASSWORD }}
+        run: |
+          set -euo pipefail
+          case "$GIT_BRANCH" in
+            dev)
+              secret_key="$GH_DEV_SECRET_KEY"
+              postgres_db="$GH_DEV_POSTGRES_DB"
+              postgres_user="$GH_DEV_POSTGRES_USER"
+              postgres_password="$GH_DEV_POSTGRES_PASSWORD"
+              ;;
+            stage)
+              secret_key="$GH_STAGE_SECRET_KEY"
+              postgres_db="$GH_STAGE_POSTGRES_DB"
+              postgres_user="$GH_STAGE_POSTGRES_USER"
+              postgres_password="$GH_STAGE_POSTGRES_PASSWORD"
+              ;;
+            master)
+              secret_key="$GH_MASTER_SECRET_KEY"
+              postgres_db="$GH_MASTER_POSTGRES_DB"
+              postgres_user="$GH_MASTER_POSTGRES_USER"
+              postgres_password="$GH_MASTER_POSTGRES_PASSWORD"
+              ;;
+          esac
+
+          required=(GH_SSH_HOST GH_SSH_PORT GH_SSH_USER GH_SSH_PASSWORD secret_key postgres_db postgres_user postgres_password ALLOWED_HOSTS)
+          missing=()
+          for name in "${required[@]}"; do
+            if [ -z "${!name:-}" ]; then missing+=("$name"); fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Missing required Actions configuration: ${missing[*]}" >&2
+            exit 1
+          fi
+
+          {
+            echo "SSH_HOST=$GH_SSH_HOST"
+            echo "SSH_PORT=$GH_SSH_PORT"
+            echo "SSH_USER=$GH_SSH_USER"
+            echo "SSH_PASSWORD=$GH_SSH_PASSWORD"
+            echo "SECRET_KEY=$secret_key"
+            echo "POSTGRES_DB=$postgres_db"
+            echo "POSTGRES_USER=$postgres_user"
+            echo "POSTGRES_PASSWORD=$postgres_password"
+          } >> "$GITHUB_ENV"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.SSH_HOST }}
+          port: ${{ env.SSH_PORT }}
+          username: ${{ env.SSH_USER }}
+          password: ${{ env.SSH_PASSWORD }}
+          envs: GIT_BRANCH,DEPLOY_PATH,SERVER_NAME,DJANGO_PORT,POSTGRES_HOST_PORT,ENV,SECRET_KEY,ALLOWED_HOSTS,CSRF_TRUSTED_ORIGINS,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+            git fetch origin "$GIT_BRANCH"
+            git checkout "$GIT_BRANCH"
+            git pull --ff-only origin "$GIT_BRANCH"
+
+            write_env_var() {
+              local key="$1" value="$2"
+              if [[ "$value" == *$'\n'* || "$value" == *$'\r'* ]]; then
+                echo "Refusing multi-line value for $key" >&2
+                exit 1
+              fi
+              value="${value//\'/\'\\\'\'}"
+              printf "%s='%s'\n" "$key" "$value" >> "$tmp_env"
+            }
+
+            tmp_env="$(mktemp)"
+            write_env_var SERVER_NAME "$SERVER_NAME"
+            write_env_var DJANGO_IMAGE "wasla_backend:$GIT_BRANCH"
+            write_env_var DJANGO_PORT "$DJANGO_PORT"
+            write_env_var ENV "$ENV"
+            write_env_var SECRET_KEY "$SECRET_KEY"
+            write_env_var ALLOWED_HOSTS "$ALLOWED_HOSTS"
+            write_env_var CSRF_TRUSTED_ORIGINS "$CSRF_TRUSTED_ORIGINS"
+            write_env_var DEBUG "False"
+            write_env_var DATABASE_TYPE "postgres"
+            write_env_var POSTGRES_DB "$POSTGRES_DB"
+            write_env_var POSTGRES_USER "$POSTGRES_USER"
+            write_env_var POSTGRES_PASSWORD "$POSTGRES_PASSWORD"
+            write_env_var POSTGRES_HOST "postgres"
+            write_env_var POSTGRES_PORT "5432"
+            write_env_var POSTGRES_HOST_PORT "$POSTGRES_HOST_PORT"
+            mv "$tmp_env" .env
+            chmod 600 .env
+
+            docker compose config --quiet
+            docker compose build
+            docker compose up -d --remove-orphans
+            docker compose ps
