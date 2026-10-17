@@ -66,3 +66,15 @@ jobs:
 
       - name: Check formatting
         run: black . --check
+
+  container-volumes:
+    name: Container volume initialization
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify writable application volumes
+        run: tests/integration/test_volume_initialization.sh

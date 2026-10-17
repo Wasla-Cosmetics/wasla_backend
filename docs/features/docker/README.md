@@ -42,7 +42,13 @@ docker compose down -v
 
 ## Container Startup
 
-The Django container runs:
+Before Django starts, the one-shot `volume-init` service:
+
+- Repairs ownership and write permissions on the persistent media and static volumes.
+- Copies `default.jpeg` into the media volume when it is missing.
+
+The service exits after initialization. Django continues to run as the unprivileged
+`django` user and then runs:
 
 ```bash
 python manage.py compilemessages --ignore ".venv/*" --verbosity 0

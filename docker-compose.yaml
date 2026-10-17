@@ -45,6 +45,15 @@ services:
       timeout: 5s
       retries: 5
 
+  volume-init:
+    image: ${DJANGO_IMAGE:-wasla_backend:latest}
+    user: "0:0"
+    restart: "no"
+    command: ["/django/docker/initialize-volumes.sh"]
+    volumes:
+      - media:/django/media
+      - staticfiles:/django/staticfiles
+
   django:
     build:
       context: .
@@ -61,6 +70,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      volume-init:
+        condition: service_completed_successfully
     expose:
       - "8000"
     restart: on-failure
