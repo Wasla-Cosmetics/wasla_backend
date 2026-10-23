@@ -33,7 +33,7 @@ Validation and API errors keep the same shape:
 
 ## Pagination
 
-List endpoints use `apps.core.pagination.OptionalPageNumberPagination`.
+List endpoints use `apps.core.pagination.StandardPageNumberPagination`.
 
 Default behavior is paginated:
 
@@ -72,42 +72,8 @@ Request a custom page size:
 GET /api/store/products/?page_size=20
 ```
 
-The maximum accepted `page_size` is `100`.
-
-Disable pagination for small lists:
-
-```http
-GET /api/store/products/?is_paginated=false
-```
-
-Accepted disabled values:
-
-- `false`
-- `0`
-- `no`
-- `off`
-
-When pagination is disabled, the list is returned in `data` and `pagination`
-is `null`:
-
-```json
-{
-  "status": 200,
-  "message": "Success",
-  "data": [
-    {
-      "id": 1,
-      "title": "Cleanser",
-      "default_price": 150.0
-    }
-  ],
-  "errors": {},
-  "pagination": null
-}
-```
-
-Do not combine `page` with `is_paginated=false`; disabling pagination ignores
-page selection.
+The maximum accepted `page_size` is `100`. Public list endpoints are always
+paginated; clients cannot disable pagination with a query parameter.
 
 ## Decimal Values
 

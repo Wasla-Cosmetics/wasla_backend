@@ -14,13 +14,31 @@ concurrency:
 
 jobs:
   tests:
-    name: Django checks and tests
+    name: PostgreSQL checks and tests
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: wasla_ci
+          POSTGRES_USER: wasla_ci
+          POSTGRES_PASSWORD: wasla_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wasla_ci -d wasla_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       ENV: local
-      DATABASE_TYPE: sqlite3
-      SQLITE_NAME: /tmp/wasla-ci.sqlite3
+      DATABASE_TYPE: postgres
+      POSTGRES_DB: wasla_ci
+      POSTGRES_USER: wasla_ci
+      POSTGRES_PASSWORD: wasla_ci
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
       SECRET_KEY: ci-only-secret-key
       ALLOWED_HOSTS: localhost,127.0.0.1
       DEBUG: "False"
@@ -34,16 +52,62 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements/base.txt
+          cache-dependency-path: requirements/base.lock
 
       - name: Install dependencies
-        run: python -m pip install -r requirements/base.txt
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gettext
+          python -m pip install -r requirements/base.lock
 
       - name: Run Django system checks
         run: python manage.py check
 
+      - name: Run production deployment checks
+        env:
+          ENV: production
+          SECRET_KEY: ci-production-check-secret-key-with-more-than-fifty-characters
+          ALLOWED_HOSTS: api.example.com
+          AUTH_OTP_DELIVERY_BACKEND: apps.authentication.otp.WebhookOtpDeliveryBackend
+          AUTH_OTP_WEBHOOK_URL: https://sms.example.com/otp
+          AUTH_OTP_WEBHOOK_TOKEN: ci-only-token
+        run: python manage.py check --deploy --fail-level ERROR
+
+      - name: Check model migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Compile translation catalogs
+        run: python manage.py compilemessages --ignore ".venv/*" --verbosity 0
+
       - name: Run tests
         run: python manage.py test
+
+  dependencies:
+    name: Dependency lock and audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements/base.lock
+
+      - name: Verify dependency lock
+        run: |
+          python -m pip install pip-tools==7.6.2
+          pip-compile --no-header --strip-extras --generate-hashes --resolver=backtracking --output-file=requirements/base.lock requirements/base.txt
+          git diff --exit-code -- requirements/base.lock
+
+      - name: Audit dependencies
+        run: |
+          python -m pip install pip-audit==2.10.1
+          pip-audit --require-hashes -r requirements/base.lock
 
   formatter:
     name: Black formatting

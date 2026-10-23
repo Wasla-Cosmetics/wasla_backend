@@ -15,6 +15,54 @@ Current project languages:
 - English: `en`
 - Arabic: `ar`
 
+## API Language Selection
+
+Use the standard `Accept-Language` header to select one language for localized
+model fields:
+
+```http
+GET /api/store/products/
+Accept-Language: ar
+```
+
+Store list endpoints also accept the special value `all`. The response keeps
+the existing localized fields and adds every configured translation using the
+language suffix:
+
+```http
+GET /api/store/products/
+Accept-Language: all
+```
+
+```json
+{
+  "title": "Cleanser",
+  "title_en": "Cleanser",
+  "title_ar": "غسول",
+  "description": "Gentle daily cleanser",
+  "description_en": "Gentle daily cleanser",
+  "description_ar": "غسول يومي لطيف"
+}
+```
+
+This special value applies only to list responses. Detail and write responses
+keep their existing shape.
+
+Translated filters and admin searches always inspect every configured
+language. `Accept-Language` controls the response language; it does not limit
+which translated values can match. For example, both requests find the same
+product:
+
+```http
+GET /api/store/products/?title=clean
+Accept-Language: ar
+```
+
+```http
+GET /api/store/products/?title=غسول
+Accept-Language: en
+```
+
 ## Workflow
 
 After adding or changing translatable strings, update the Arabic catalog:
@@ -37,13 +85,8 @@ Docker builds compile messages with:
 django-admin compilemessages --ignore ".venv/*" --verbosity 0
 ```
 
-Docker Compose compiles messages on startup with:
-
-```bash
-python manage.py compilemessages --ignore ".venv/*" --verbosity 0
-```
-
-The Compose startup command is needed because the local bind mount can hide `.mo` files generated during image build.
+Docker Compose uses the compiled catalogs from the image. The project does not
+bind-mount source code over those files at runtime.
 
 ## Adding Translatable Strings
 

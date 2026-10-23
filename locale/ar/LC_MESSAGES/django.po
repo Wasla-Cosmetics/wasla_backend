@@ -318,3 +318,93 @@ msgstr "المنتج"
 #: apps/store/models.py:77
 msgid "products"
 msgstr "المنتجات"
+
+msgid "API throttle cache entry"
+msgstr "مدخل ذاكرة التخزين المؤقت لتقييد طلبات API"
+
+msgid "API throttle cache entries"
+msgstr "مدخلات ذاكرة التخزين المؤقت لتقييد طلبات API"
+
+msgid "Compare-at price must be greater than the default price."
+msgstr "يجب أن يكون السعر قبل الخصم أكبر من السعر الافتراضي."
+
+msgid "Error"
+msgstr "خطأ"
+
+msgid "If the account exists, an OTP has been sent."
+msgstr "إذا كان الحساب موجودًا، فقد تم إرسال رمز تحقق."
+
+msgid "Invalid credentials."
+msgstr "بيانات تسجيل الدخول غير صحيحة."
+
+msgid "Invalid guest token."
+msgstr "رمز الزائر غير صالح."
+
+msgid "Invalid or expired OTP"
+msgstr "رمز التحقق غير صالح أو منتهي الصلاحية"
+
+msgid "Invalid or expired reset token"
+msgstr "رمز إعادة التعيين غير صالح أو منتهي الصلاحية"
+
+msgid "OTP delivery is temporarily unavailable."
+msgstr "خدمة إرسال رمز التحقق غير متاحة مؤقتًا."
+
+msgid "Product cannot be changed."
+msgstr "لا يمكن تغيير المنتج."
+
+msgid "Refresh token does not belong to this user."
+msgstr "رمز التحديث لا يخص هذا المستخدم."
+
+msgid "Success"
+msgstr "تم بنجاح"
+
+msgid "Token is no longer valid."
+msgstr "لم يعد الرمز صالحًا."
+
+msgid "Validation error"
+msgstr "خطأ في التحقق من البيانات"
+
+msgid "You already reviewed this product."
+msgstr "لقد قيّمت هذا المنتج من قبل."
+
+msgid "compare-at price"
+msgstr "السعر قبل الخصم"
+
+msgid "guest user"
+msgstr "مستخدم زائر"
+
+msgid "guest users"
+msgstr "المستخدمون الزائرون"
+
+msgid "otp purpose"
+msgstr "غرض رمز التحقق"
+
+msgid "product image"
+msgstr "صورة المنتج"
+
+msgid "product images"
+msgstr "صور المنتج"
+
+msgid "product review"
+msgstr "تقييم المنتج"
+
+msgid "product reviews"
+msgstr "تقييمات المنتجات"
+
+msgid "rating"
+msgstr "التقييم"
+
+msgid "reward points"
+msgstr "نقاط المكافآت"
+
+msgid "stock quantity"
+msgstr "كمية المخزون"
+
+msgid "token version"
+msgstr "إصدار الرمز"
+
+msgid "user"
+msgstr "المستخدم"
+
+msgid "users"
+msgstr "المستخدمون"

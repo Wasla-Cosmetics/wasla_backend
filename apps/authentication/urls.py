@@ -12,6 +12,7 @@ from .views import (
     SendOtpView,
     VerifyOtpView,
     LogoutView,
+    VersionedTokenRefreshView,
 )
 
 router = DefaultRouter()
@@ -25,6 +26,7 @@ urlpatterns = [
     path("", include(router.urls)),
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
+    path("token/refresh/", VersionedTokenRefreshView.as_view(), name="token_refresh"),
     path("send-otp/", SendOtpView.as_view(), name="send_otp"),
     path("verify-otp/", VerifyOtpView.as_view(), name="verify_otp"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset_password"),

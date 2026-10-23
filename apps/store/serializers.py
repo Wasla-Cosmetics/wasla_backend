@@ -1,10 +1,11 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-from apps.store.models import Ad, Category, Product, ProductReview
+from apps.core.serializers import AllLanguagesModelSerializer
+from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
 
 
-class AdSerializer(serializers.ModelSerializer):
+class AdSerializer(AllLanguagesModelSerializer):
     class Meta:
         model = Ad
         fields = [
@@ -15,14 +16,22 @@ class AdSerializer(serializers.ModelSerializer):
         ]
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(AllLanguagesModelSerializer):
     class Meta:
         model = Category
         fields = ["id", "title", "image", "parent"]
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ["id", "image"]
+
+
+class ProductSerializer(AllLanguagesModelSerializer):
     category = CategorySerializer(read_only=True)
+    images = ProductImageSerializer(many=True, read_only=True)
+    discount_percentage = serializers.IntegerField(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
         source="category",
@@ -38,12 +47,36 @@ class ProductSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "image",
+            "images",
             "default_price",
+            "compare_at_price",
+            "discount_percentage",
             "stock_quantity",
             "reward_points",
             "is_newest",
             "is_best_seller",
         ]
+
+    def validate(self, attrs):
+        default_price = attrs.get(
+            "default_price",
+            self.instance.default_price if self.instance else 0,
+        )
+        compare_at_price = attrs.get(
+            "compare_at_price",
+            self.instance.compare_at_price if self.instance else None,
+        )
+
+        if compare_at_price is not None and compare_at_price <= default_price:
+            raise serializers.ValidationError(
+                {
+                    "compare_at_price": _(
+                        "Compare-at price must be greater than the default price."
+                    )
+                }
+            )
+
+        return attrs
 
 
 class ProductReviewSerializer(serializers.ModelSerializer):
@@ -52,8 +85,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         source="product",
         write_only=True,
     )
-    user_id = serializers.IntegerField(source="user.id", read_only=True)
-    user_full_name = serializers.CharField(source="user.full_name", read_only=True)
 
     class Meta:
         model = ProductReview
@@ -61,8 +92,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             "id",
             "product_id",
             "product",
-            "user_id",
-            "user_full_name",
             "rating",
             "description",
             "created_at",
@@ -71,8 +100,6 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "id",
             "product",
-            "user_id",
-            "user_full_name",
             "created_at",
             "updated_at",
         ]

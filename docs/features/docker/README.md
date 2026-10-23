@@ -48,14 +48,17 @@ Before Django starts, the one-shot `volume-init` service:
 - Copies `default.jpeg` into the media volume when it is missing.
 
 The service exits after initialization. Django continues to run as the unprivileged
-`django` user and then runs:
+`django` user. Translation catalogs are compiled while the image is built. At
+container startup Django runs:
 
 ```bash
-python manage.py compilemessages --ignore ".venv/*" --verbosity 0
 python manage.py collectstatic --no-input
 python manage.py migrate
 gunicorn project.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2 --timeout 0
 ```
+
+The migration step also ensures `default.jpeg` exists in the configured media
+storage without replacing an existing customized file.
 
 Docker Compose forces Django to use Postgres because the stack includes a Postgres service.
 

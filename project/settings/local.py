@@ -79,7 +79,6 @@ BUILT_IN_MIDDLEWARE = [
 ]
 
 LOCAL_MIDDLEWARE = [
-    "project.middlewares.TokenAuthMiddleware",
     "project.middlewares.UnifiedAPIResponseMiddleware",
 ]
 
@@ -173,6 +172,17 @@ USE_I18N = True
 
 USE_TZ = True
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "api_throttle_cache",
+        "OPTIONS": {
+            "MAX_ENTRIES": 10_000,
+            "CULL_FREQUENCY": 3,
+        },
+    }
+}
+
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
@@ -183,21 +193,35 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 AUTH_USER_MODEL = "authentication.User"
 AUTH_OTP_TTL_MINUTES = int(env.get("AUTH_OTP_TTL_MINUTES", "10"))
+AUTH_OTP_DELIVERY_BACKEND = env.get(
+    "AUTH_OTP_DELIVERY_BACKEND",
+    "apps.authentication.otp.UnconfiguredOtpDeliveryBackend",
+)
+AUTH_OTP_WEBHOOK_URL = env.get("AUTH_OTP_WEBHOOK_URL", "")
+AUTH_OTP_WEBHOOK_TOKEN = env.get("AUTH_OTP_WEBHOOK_TOKEN", "")
+AUTH_OTP_WEBHOOK_TIMEOUT_SECONDS = int(
+    env.get("AUTH_OTP_WEBHOOK_TIMEOUT_SECONDS", "10")
+)
+PASSWORD_RESET_TIMEOUT = int(env.get("PASSWORD_RESET_TIMEOUT", "600"))
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "apps.authentication.authentication.HeaderTokenAuthentication",
     ],
-    "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.OptionalPageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.StandardPageNumberPagination",
     "EXCEPTION_HANDLER": "project.exception_handler.custom_exception_handler",
     "COERCE_DECIMAL_TO_STRING": False,
     "PAGE_SIZE": 10,
+    "DEFAULT_THROTTLE_RATES": {
+        "auth_ip": env.get("AUTH_IP_THROTTLE_RATE", "20/minute"),
+        "auth_phone": env.get("AUTH_PHONE_THROTTLE_RATE", "5/minute"),
+    },
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=10),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
-    "ROTATE_REFRESH_TOKENS": False,
+    "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,

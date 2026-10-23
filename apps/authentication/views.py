@@ -1,46 +1,62 @@
-from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
 from django.utils.translation import gettext as _
-from rest_framework.generics import RetrieveUpdateAPIView, CreateAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from apps.authentication.models import User, GuestUser
+from rest_framework_simplejwt.views import TokenRefreshView
+
+from apps.authentication.models import GuestUser, User
 from apps.authentication.serializers import (
-    LoginSerializer,
-    VerifyOtpSerializer,
-    ResetPasswordSerializer,
     ChangePasswordSerializer,
-    LogoutSerializer,
     DeleteAccountSerializer,
-    UserSerializer,
     GuestUserSerializer,
+    LoginSerializer,
+    LogoutSerializer,
+    ResetPasswordSerializer,
+    UserSerializer,
+    VerifyOtpSerializer,
+    VersionedTokenRefreshSerializer,
+)
+from apps.authentication.throttles import AuthIPRateThrottle, AuthPhoneRateThrottle
+from apps.authentication.tokens import create_password_reset_token
+from apps.authentication.utils import (
+    generate_successful_auth_response,
+    handle_otp_for_user,
 )
 from apps.core.responses import build_response
-from apps.authentication.utils import (
-    handle_otp_for_user,
-    generate_successful_auth_response,
-)
+
+AUTH_THROTTLES = [AuthIPRateThrottle, AuthPhoneRateThrottle]
+
+
+class VersionedTokenRefreshView(TokenRefreshView):
+    serializer_class = VersionedTokenRefreshSerializer
+    throttle_classes = AUTH_THROTTLES
 
 
 class RegisterView(APIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+    throttle_classes = AUTH_THROTTLES
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(
             data=request.data, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = handle_otp_for_user(request.data.get("phone"), "register")
+        with transaction.atomic():
+            serializer.save()
+            response = handle_otp_for_user(request.data.get("phone"), "register")
         return Response(response, status=response["status"])
 
 
 class LoginView(APIView):
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
+    throttle_classes = AUTH_THROTTLES
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(
@@ -56,6 +72,7 @@ class LoginView(APIView):
 
 class SendOtpView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = AUTH_THROTTLES
 
     def post(self, request, *args, **kwargs):
         response = handle_otp_for_user(request.data.get("phone"), "send-otp")
@@ -65,6 +82,7 @@ class SendOtpView(APIView):
 class VerifyOtpView(APIView):
     serializer_class = VerifyOtpSerializer
     permission_classes = [AllowAny]
+    throttle_classes = AUTH_THROTTLES
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(
@@ -72,15 +90,23 @@ class VerifyOtpView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
-        response = generate_successful_auth_response(
-            user, _("OTP verified"), self.request
-        )
+        if serializer.validated_data["action"] == "reset-password":
+            response = build_response(
+                status_code=status.HTTP_200_OK,
+                message=_("OTP verified"),
+                data={"reset_token": create_password_reset_token(user)},
+            )
+        else:
+            response = generate_successful_auth_response(
+                user, _("OTP verified"), self.request
+            )
         return Response(response, status=response["status"])
 
 
 class ResetPasswordView(APIView):
     serializer_class = ResetPasswordSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
+    throttle_classes = AUTH_THROTTLES
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(
@@ -127,7 +153,10 @@ class LogoutView(APIView):
     serializer_class = LogoutSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(
+            data=request.data,
+            context={"request": request},
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = build_response(

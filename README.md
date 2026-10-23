@@ -37,6 +37,7 @@ Feature and workflow documentation lives in focused README files:
 - [Settings Environments](docs/features/settings/README.md)
 - [Development Commands](docs/features/development-commands/README.md)
 - [API Behavior](docs/features/api-behavior/README.md)
+- [Authentication](docs/features/authentication/README.md)
 - [Store App](docs/features/store/README.md)
 
 ## Tech Stack
@@ -75,11 +76,13 @@ Feature and workflow documentation lives in focused README files:
 
 - `project/settings/__init__.py` selects the settings module using `ENV`.
 - `project/settings/local.py` contains the shared base/local settings.
-- `project/settings/production.py` imports local settings, disables `DEBUG`, and requires production-safe values.
+- `project/settings/deployed.py` provides the shared fail-fast staging and production security baseline.
+- `project/settings/production.py` enables the production HSTS duration.
 - `apps/core/management/commands/startapp.py` overrides Django's `startapp` command to support nested app paths and auto-register apps.
 - `locale/` contains committed translation source files.
 - `docker-compose.yaml` runs Django and PostgreSQL together.
 - `.env.example` documents the environment variables needed to run the project.
+- `requirements/base.lock` pins and hashes the complete production dependency tree.
 
 ## Notes
 

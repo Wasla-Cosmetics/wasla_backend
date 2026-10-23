@@ -1,20 +1,27 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 from apps.authentication.managers import UserManager
+from apps.core.models import TimeStampedModel
 
 
-class User(AbstractUser):
+class User(AbstractUser, TimeStampedModel):
     username = None
     phone = models.CharField(_("phone"), max_length=255, unique=True)
     email = models.EmailField(_("email"), max_length=255, unique=True)
     full_name = models.CharField(_("full name"), max_length=255)
     is_active = models.BooleanField(_("active"), default=False)
     reward_points = models.PositiveIntegerField(_("reward points"), default=0)
-    otp = models.CharField(_("otp"), max_length=6, null=True, blank=True)
+    otp = models.CharField(_("otp"), max_length=128, null=True, blank=True)
+    otp_purpose = models.CharField(
+        _("otp purpose"),
+        max_length=32,
+        null=True,
+        blank=True,
+    )
     otp_expires_at = models.DateTimeField(_("otp expires at"), null=True, blank=True)
-    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
+    token_version = models.PositiveIntegerField(_("token version"), default=0)
     objects = UserManager()
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["email", "full_name"]
@@ -27,10 +34,8 @@ class User(AbstractUser):
         return self.phone
 
 
-class GuestUser(models.Model):
+class GuestUser(TimeStampedModel):
     session_key = models.CharField(_("session key"), max_length=40, unique=True)
-    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     @property
     def is_anonymous(self):

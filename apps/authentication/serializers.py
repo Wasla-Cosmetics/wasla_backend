@@ -5,10 +5,31 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.authentication.models import GuestUser, User
+from apps.authentication.otp import REGISTER_OTP, RESET_PASSWORD_OTP, verify_otp
+from apps.authentication.tokens import (
+    get_password_reset_user,
+    revoke_user_tokens,
+    validate_token_version,
+)
+
+
+class VersionedTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh"])
+        user_id = refresh.get("user_id")
+        user = User.objects.filter(pk=user_id, is_active=True).first()
+
+        if user is None:
+            raise AuthenticationFailed(_("Invalid refresh token"))
+
+        validate_token_version(user, refresh)
+        return super().validate(attrs)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -22,13 +43,13 @@ class LoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
-            raise serializers.ValidationError({"phone": _("Phone number not found")})
+            raise serializers.ValidationError(_("Invalid credentials."))
 
         if not user.check_password(password):
-            raise serializers.ValidationError({"password": _("Invalid password.")})
+            raise serializers.ValidationError(_("Invalid credentials."))
 
         if not user.is_active:
-            raise serializers.ValidationError({"is_active": False})
+            raise serializers.ValidationError(_("Invalid credentials."))
 
         user.last_login = timezone.now()
         user.save(update_fields=["last_login"])
@@ -46,49 +67,35 @@ class VerifyOtpSerializer(serializers.Serializer):
         otp = data.get("otp")
         action = data.get("action")
 
-        try:
-            if action == "register":
-                user = User.objects.get(phone=phone, is_active=False)
-            elif action == "reset-password":
-                user = User.objects.get(phone=phone, is_active=True)
-            else:
-                raise serializers.ValidationError({"action": _("Invalid action")})
-        except User.DoesNotExist:
-            raise serializers.ValidationError({"phone": _("Phone number not found")})
+        purpose = REGISTER_OTP if action == "register" else RESET_PASSWORD_OTP
+        expected_active = action == "reset-password"
+        user = User.objects.filter(phone=phone, is_active=expected_active).first()
 
-        if not user.otp or user.otp != otp:
-            raise serializers.ValidationError({"otp": _("Invalid OTP")})
+        if user is None or not verify_otp(user, otp, purpose):
+            raise serializers.ValidationError({"otp": _("Invalid or expired OTP")})
 
-        now = timezone.now()
-        if user.otp_expires_at and user.otp_expires_at <= now:
-            user.otp = None
-            user.otp_expires_at = None
-            user.save(update_fields=["otp", "otp_expires_at"])
-            raise serializers.ValidationError({"otp": _("OTP has expired")})
+        if action == "register":
+            user.is_active = True
+            user.last_login = timezone.now()
+            user.save(update_fields=["is_active", "last_login"])
 
-        user.is_active = True
-        user.last_login = now
-        user.otp = None
-        user.otp_expires_at = None
-        user.save(update_fields=["is_active", "last_login", "otp", "otp_expires_at"])
         data["user"] = user
         return data
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-    phone = serializers.CharField(required=False)
+    reset_token = serializers.CharField(write_only=True, trim_whitespace=False)
     password = serializers.CharField(write_only=True, trim_whitespace=False)
     confirm_password = serializers.CharField(write_only=True, trim_whitespace=False)
 
     def validate(self, data):
-        phone = data.get("phone")
         password = data.get("password")
         confirm_password = data.get("confirm_password")
-        user = self.context["request"].user
+        user = get_password_reset_user(data.get("reset_token"))
 
-        if phone and phone != user.phone:
+        if user is None:
             raise serializers.ValidationError(
-                {"phone": _("Phone number does not match user")}
+                {"reset_token": _("Invalid or expired reset token")}
             )
 
         if password != confirm_password:
@@ -108,8 +115,18 @@ class ResetPasswordSerializer(serializers.Serializer):
         user.set_password(password)
         user.last_login = timezone.now()
         user.otp = None
+        user.otp_purpose = None
         user.otp_expires_at = None
-        user.save(update_fields=["password", "last_login", "otp", "otp_expires_at"])
+        user.save(
+            update_fields=[
+                "password",
+                "last_login",
+                "otp",
+                "otp_purpose",
+                "otp_expires_at",
+            ]
+        )
+        revoke_user_tokens(user)
         return user
 
 
@@ -145,7 +162,8 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.validated_data["user"]
         new_password = self.validated_data["new_password"]
         user.set_password(new_password)
-        user.save()
+        user.save(update_fields=["password"])
+        revoke_user_tokens(user)
         return user
 
 
@@ -155,9 +173,17 @@ class LogoutSerializer(serializers.Serializer):
     def validate_refresh(self, value):
         try:
             token = RefreshToken(value)
-            self.context["token"] = token
         except TokenError:
             raise serializers.ValidationError({"refresh": _("Invalid refresh token")})
+
+        request = self.context["request"]
+        user_id_claim = token.get("user_id")
+        if str(user_id_claim) != str(request.user.pk):
+            raise serializers.ValidationError(
+                _("Refresh token does not belong to this user.")
+            )
+
+        self.context["token"] = token
         return value
 
     def save(self):
