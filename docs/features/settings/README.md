@@ -22,6 +22,13 @@ ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 CSRF_TRUSTED_ORIGINS=
 DEBUG=True
 AUTH_OTP_TTL_MINUTES=10
+AUTH_OTP_DELIVERY_BACKEND=apps.authentication.otp.UnconfiguredOtpDeliveryBackend
+AUTH_OTP_WEBHOOK_URL=
+AUTH_OTP_WEBHOOK_TOKEN=
+AUTH_OTP_WEBHOOK_TIMEOUT_SECONDS=10
+AUTH_IP_THROTTLE_RATE=20/minute
+AUTH_PHONE_THROTTLE_RATE=5/minute
+PASSWORD_RESET_TIMEOUT=600
 
 DATABASE_TYPE=postgres
 
@@ -67,21 +74,30 @@ CSRF_TRUSTED_ORIGINS=https://vocal-duckling-steadily.ngrok-free.app
 - `stage` or `staging`
 - `prod` or `production`
 
-## Production Settings
+## Deployed Settings
 
-Production settings:
+Staging and production settings:
 
 - Set `DEBUG = False`.
-- Require `SECRET_KEY`.
+- Require a strong `SECRET_KEY` of at least 50 characters.
 - Require `ALLOWED_HOSTS`.
+- Require a configured OTP delivery backend.
 - Enable secure cookie settings.
+- Redirect HTTP to HTTPS by default.
 - Support `CSRF_TRUSTED_ORIGINS`.
+
+The included webhook delivery backend sends `{ "phone": ..., "otp": ... }` to
+an HTTPS provider endpoint using the configured bearer token. Staging defaults
+HSTS to one day; production defaults it to one year.
 
 Example:
 
 ```env
 ENV=production
-SECRET_KEY=your-production-secret
+SECRET_KEY=replace-with-a-random-secret-of-at-least-fifty-characters
 ALLOWED_HOSTS=api.example.com
 CSRF_TRUSTED_ORIGINS=https://api.example.com
+AUTH_OTP_DELIVERY_BACKEND=apps.authentication.otp.WebhookOtpDeliveryBackend
+AUTH_OTP_WEBHOOK_URL=https://sms-provider.example.com/otp
+AUTH_OTP_WEBHOOK_TOKEN=replace-with-a-secret
 ```

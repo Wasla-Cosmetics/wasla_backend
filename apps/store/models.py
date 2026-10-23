@@ -4,8 +4,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from mptt.models import MPTTModel, TreeForeignKey
 
+from apps.core.models import TimeStampedModel
 
-class Ad(models.Model):
+
+class Ad(TimeStampedModel):
     title = models.CharField(_("title"), max_length=200)
     subtitle = models.TextField(_("subtitle"), blank=True)
     image = models.ImageField(
@@ -14,8 +16,6 @@ class Ad(models.Model):
         default="default.jpeg",
         blank=True,
     )
-    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
         verbose_name = _("ad")
@@ -25,7 +25,7 @@ class Ad(models.Model):
         return self.title
 
 
-class Category(MPTTModel):
+class Category(MPTTModel, TimeStampedModel):
     title = models.CharField(_("title"), max_length=255)
     image = models.ImageField(
         _("image"),
@@ -41,8 +41,6 @@ class Category(MPTTModel):
         related_name="subcategories",
         verbose_name=_("parent"),
     )
-    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class MPTTMeta:
         order_insertion_by = ["title"]
@@ -55,7 +53,7 @@ class Category(MPTTModel):
         return self.title
 
 
-class Product(models.Model):
+class Product(TimeStampedModel):
     category = models.ForeignKey(
         Category,
         related_name="products",
@@ -83,21 +81,62 @@ class Product(models.Model):
         validators=[MinValueValidator(0)],
         default=0,
     )
+    compare_at_price = models.DecimalField(
+        _("compare-at price"),
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        null=True,
+        blank=True,
+    )
     is_newest = models.BooleanField(_("newest"), default=False)
     is_best_seller = models.BooleanField(_("best seller"), default=False)
-    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
         verbose_name = _("product")
         verbose_name_plural = _("products")
         ordering = ["title"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(compare_at_price__isnull=True)
+                    | models.Q(compare_at_price__gt=models.F("default_price"))
+                ),
+                name="compare_at_price_above_default_price",
+            ),
+        ]
+
+    @property
+    def discount_percentage(self):
+        if self.compare_at_price is None:
+            return 0
+
+        discount = self.compare_at_price - self.default_price
+        return round((discount / self.compare_at_price) * 100)
 
     def __str__(self):
         return self.title
 
 
-class ProductReview(models.Model):
+class ProductImage(TimeStampedModel):
+    product = models.ForeignKey(
+        Product,
+        related_name="images",
+        on_delete=models.CASCADE,
+        verbose_name=_("product"),
+    )
+    image = models.ImageField(_("image"), upload_to="products/")
+
+    class Meta:
+        verbose_name = _("product image")
+        verbose_name_plural = _("product images")
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.product} - {self.id}"
+
+
+class ProductReview(TimeStampedModel):
     product = models.ForeignKey(
         Product,
         related_name="reviews",
@@ -115,8 +154,6 @@ class ProductReview(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)],
     )
     description = models.TextField(_("description"))
-    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
         verbose_name = _("product review")

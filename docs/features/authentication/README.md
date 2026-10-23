@@ -1,0 +1,45 @@
+# Authentication
+
+Authentication routes are mounted under `/api/auth/` and use bearer JWTs.
+Access tokens expire after 10 minutes; refresh tokens expire after 30 days and
+rotate through `POST /api/auth/token/refresh/`.
+
+## OTP Flow
+
+Registration and password reset use six-digit, purpose-bound OTPs. Only a
+password hash of the OTP is stored, and the OTP is cleared after successful
+verification or failed delivery. Authentication endpoints are throttled by
+both client IP and normalized phone number.
+
+Local settings use an unconfigured delivery backend intentionally, so OTP
+requests return `503` until a delivery backend is selected. Staging and
+production refuse to start with that backend. The included webhook backend
+posts this payload to the configured HTTPS endpoint:
+
+```json
+{
+  "phone": "+201000000001",
+  "otp": "654321"
+}
+```
+
+It authenticates with `Authorization: Bearer <AUTH_OTP_WEBHOOK_TOKEN>`.
+
+## Password Reset
+
+The reset flow is deliberately separate from login:
+
+1. `POST /api/auth/send-otp/` with the phone number.
+2. `POST /api/auth/verify-otp/` with `action: "reset-password"`.
+3. Read the short-lived `reset_token` from the response. No access or refresh
+   token is returned at this step.
+4. `POST /api/auth/reset-password/` with `reset_token`, `password`, and
+   `confirm_password`.
+
+Changing or resetting a password increments the user's token version and
+blacklists outstanding refresh tokens, invalidating previously issued access
+and refresh tokens. Logout accepts only a refresh token belonging to the
+authenticated user.
+
+Login and OTP-request failures use generic responses where necessary so the
+API does not disclose whether a phone number belongs to an active account.
