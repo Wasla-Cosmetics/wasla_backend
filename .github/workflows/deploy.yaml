@@ -76,7 +76,7 @@ jobs:
           python manage.py makemigrations --check --dry-run
           python manage.py compilemessages --ignore ".venv/*" --verbosity 0
           python manage.py test
-          pip-compile --no-header --strip-extras --generate-hashes --resolver=backtracking --output-file=requirements/base.lock requirements/base.txt
+          pip-compile --no-header --no-annotate --strip-extras --generate-hashes --resolver=backtracking --output-file=requirements/base.lock requirements/base.txt
           git diff --exit-code -- requirements/base.lock
           pip-audit --require-hashes -r requirements/base.lock
 

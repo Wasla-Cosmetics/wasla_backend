@@ -101,7 +101,7 @@ jobs:
       - name: Verify dependency lock
         run: |
           python -m pip install pip-tools==7.6.2
-          pip-compile --no-header --strip-extras --generate-hashes --resolver=backtracking --output-file=requirements/base.lock requirements/base.txt
+          pip-compile --no-header --no-annotate --strip-extras --generate-hashes --resolver=backtracking --output-file=requirements/base.lock requirements/base.txt
           git diff --exit-code -- requirements/base.lock
 
       - name: Audit dependencies
