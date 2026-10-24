@@ -117,3 +117,32 @@ AUTH_OTP_DELIVERY_BACKEND=apps.authentication.otp.WebhookOtpDeliveryBackend
 AUTH_OTP_WEBHOOK_URL=https://sms-provider.example.com/otp
 AUTH_OTP_WEBHOOK_TOKEN=replace-with-a-secret
 ```
+
+## Deployment OTP Providers
+
+The `dev` deployment always uses Mailpit and does not require webhook or SMTP
+credentials. Staging and production default to the HTTPS webhook backend and
+remain fail-closed until their provider configuration exists.
+
+| GitHub configuration | Staging | Production | Storage |
+| --- | --- | --- | --- |
+| Webhook URL | `STAGE_OTP_WEBHOOK_URL` | `MASTER_OTP_WEBHOOK_URL` | Variable |
+| Webhook bearer token | `STAGE_OTP_WEBHOOK_TOKEN` | `MASTER_OTP_WEBHOOK_TOKEN` | Secret |
+
+To select real SMTP email delivery later, set the environment-specific
+`*_OTP_DELIVERY_BACKEND` variable to
+`apps.authentication.otp.EmailOtpDeliveryBackend` and configure:
+
+| Setting suffix | Example | Storage |
+| --- | --- | --- |
+| `EMAIL_HOST` | `smtp.example.com` | Variable |
+| `EMAIL_PORT` | `587` | Variable |
+| `EMAIL_USE_TLS` | `True` | Variable |
+| `EMAIL_USE_SSL` | `False` | Variable |
+| `DEFAULT_FROM_EMAIL` | `no-reply@example.com` | Variable |
+| `EMAIL_HOST_USER` | SMTP account username | Secret |
+| `EMAIL_HOST_PASSWORD` | SMTP account password | Secret |
+
+Prefix every name with `STAGE_` or `MASTER_`, matching the target GitHub
+environment. SMTP username and password are required for deployed email
+delivery; Mailpit remains unauthenticated and development-only.
