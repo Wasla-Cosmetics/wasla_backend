@@ -2,6 +2,15 @@
 
 The `store` app contains catalog and storefront models.
 
+Catalog ownership follows one chain:
+
+```text
+Brand → Branch → Category → Product
+```
+
+A product stores only its category. Its branch and brand are derived through
+that category, so ownership cannot drift between duplicate foreign keys.
+
 ## Models
 
 ### Ad
@@ -17,17 +26,43 @@ Simple promotional ad model:
 The ad model intentionally stays simple. Hero/banner-specific fields are not
 part of this model.
 
+### Brand
+
+Customer-facing catalog owner:
+
+- translated `title`
+- `image`
+- `created_at`
+- `updated_at`
+
+Deleting a brand that still has branches is rejected with HTTP `409` by the
+API.
+
+### Branch
+
+Catalog branch belonging to one brand:
+
+- `brand`
+- translated `title`
+- `image`
+- `created_at`
+- `updated_at`
+
+Deleting a branch that still has categories is rejected with HTTP `409`.
+
 ### Category
 
 Tree-based product category using `django-mptt`:
 
 - `title`
 - `image`
+- `branch`
 - `parent`
 - `created_at`
 - `updated_at`
 
-Categories are ordered inside the tree by `title`.
+Categories are ordered inside the tree by `title`. A category and its parent
+and child nodes must all belong to the same branch.
 
 ### Product
 
@@ -121,13 +156,40 @@ Available viewsets:
 
 ```http
 GET /api/store/ads/
+GET|POST /api/store/brands/
+GET|PUT|PATCH|DELETE /api/store/brands/{id}/
+GET|POST /api/store/branches/
+GET|PUT|PATCH|DELETE /api/store/branches/{id}/
 GET /api/store/categories/
 GET /api/store/products/
 GET /api/store/reviews/
 POST /api/store/reviews/
 ```
 
-Write operations require admin permissions. Read operations are public.
+The category and product viewsets also provide the standard detail and admin
+write operations. Store writes require admin permissions; reads are public.
+Branch writes use `brand_id`, category writes use `branch_id`, and product
+writes use `category_id`. Reads nest the ownership chain, for example:
+
+```json
+{
+  "id": 42,
+  "title": "Cleanser",
+  "category": {
+    "id": 7,
+    "title": "Face Care",
+    "branch": {
+      "id": 3,
+      "title": "Cairo",
+      "brand": {
+        "id": 1,
+        "title": "Wasla"
+      }
+    }
+  }
+}
+```
+
 Review reads are public, but creating a review requires a user.
 Updating or deleting a review is limited to the review owner or admin users.
 Concurrent attempts to create the same review return HTTP `409` rather than a
@@ -146,23 +208,26 @@ language:
 
 - Product `title` and `description`
 - Category `title`
+- Brand `title`
+- Branch `title`
 - Ad `title` and `subtitle`
 
 User accounts, guest sessions, reviews, OTPs, tokens, and other internal
 records are intentionally excluded. Each result has a `type` value of
-`product`, `category`, or `ad`, followed by that model's normal API fields.
+`product`, `category`, `brand`, `branch`, or `ad`, followed by that model's
+normal API fields.
 
 The `q` parameter is required after whitespace is trimmed and must contain
 between 2 and 100 characters. Restrict a request to one or more public result
 types with a comma-separated allowlist:
 
 ```http
-GET /api/search/?q=rose&types=product,ad
+GET /api/search/?q=rose&types=product,brand,branch,ad
 ```
 
 Unknown result types return HTTP `400`. Results are ranked by exact title,
 title prefix, partial title, then description or subtitle match. Ties are
-stable, with products before categories before ads.
+stable, with products before categories, brands, branches, and ads.
 
 Search uses the standard response envelope and page-number pagination. Its
 `page_size` is capped at `50`, even when a larger value is requested.
@@ -181,19 +246,33 @@ defaults to `30/minute`.
 
 ## Filtering
 
-Products support filters:
+Brand, branch, category, and product lists support ownership and translated
+title filters:
 
 ```http
+GET /api/store/brands/?title=وصلة
+GET /api/store/branches/?brand=1
+GET /api/store/branches/?brand_title=wasla
+GET /api/store/branches/?title=القاهرة
+GET /api/store/categories/?branch=3
+GET /api/store/categories/?brand=1
+GET /api/store/categories/?branch_title=cairo
+GET /api/store/categories/?brand_title=وصلة
 GET /api/store/products/?title=cleanser
+GET /api/store/products/?category=7
+GET /api/store/products/?branch=3
+GET /api/store/products/?brand=1
 GET /api/store/products/?category_title=Beauty
+GET /api/store/products/?branch_title=القاهرة
+GET /api/store/products/?brand_title=wasla
 GET /api/store/products/?is_newest=true
 GET /api/store/products/?is_best_seller=true
 ```
 
-`title` is a case-insensitive partial match. `category_title` is an exact
-match. Both translated filters inspect all configured languages independently
-of `Accept-Language`, so English and Arabic filter values work with `en`, `ar`,
-or `all` responses.
+Translated title filters inspect all configured languages independently of
+`Accept-Language`, so English and Arabic filter values work with `en`, `ar`,
+or `all` responses. The product `category_title` filter remains an exact
+match; the other title filters are case-insensitive partial matches.
 
 Filters can be combined with pagination query parameters:
 

@@ -25,9 +25,10 @@ GET /api/store/products/
 Accept-Language: ar
 ```
 
-Store list endpoints and the global catalog search also accept the special
-value `all`. The response keeps the existing localized fields and adds every
-configured translation using the language suffix:
+Brand, branch, category, product, and ad list endpoints and the global catalog
+search also accept the special value `all`. The response keeps the existing
+localized fields and adds every configured translation using the language
+suffix:
 
 ```http
 GET /api/store/products/
@@ -63,7 +64,8 @@ GET /api/store/products/?title=غسول
 Accept-Language: en
 ```
 
-The same rule applies to global search:
+The same rule applies to brand, branch, category, and product filters and to
+global search:
 
 ```http
 GET /api/search/?q=غسول
