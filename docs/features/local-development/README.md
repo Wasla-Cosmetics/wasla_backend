@@ -42,6 +42,12 @@ Apply migrations:
 python manage.py migrate
 ```
 
+Create or refresh development seed data:
+
+```bash
+python manage.py seed_data
+```
+
 Run the development server:
 
 ```bash
