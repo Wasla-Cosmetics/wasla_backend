@@ -313,11 +313,13 @@ class UserSerializer(serializers.ModelSerializer):
 class GuestUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuestUser
-        fields = ["id", "session_key"]
+        fields = ["id", "session_key", "expires_at"]
         extra_kwargs = {
             "session_key": {"read_only": True},
+            "expires_at": {"read_only": True},
         }
 
     def create(self, validated_data):
+        GuestUser.objects.filter(expires_at__lte=timezone.now()).delete()
         session_key = str(uuid4())
         return GuestUser.objects.create(session_key=session_key)

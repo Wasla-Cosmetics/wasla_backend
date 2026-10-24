@@ -57,6 +57,6 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(GuestUser)
 class GuestUserAdmin(admin.ModelAdmin):
-    list_display = ("id", "session_key", "created_at", "updated_at")
+    list_display = ("id", "session_key", "expires_at", "created_at", "updated_at")
     search_fields = ("session_key",)
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at", "updated_at", "expires_at")

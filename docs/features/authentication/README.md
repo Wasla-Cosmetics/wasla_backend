@@ -52,3 +52,11 @@ authenticated user.
 
 Login and OTP-request failures use generic responses where necessary so the
 API does not disclose whether a phone number belongs to an active account.
+
+## Guest Sessions
+
+`POST /api/auth/guest-users/` creates a guest session for clients that do not
+yet have an account. Creation is rate limited per client IP, sessions expire
+after the configured retention period, and expired rows are removed whenever a
+new guest session is created. The response includes `expires_at`; send the
+session key in `X-Guest-Token` while it remains valid.

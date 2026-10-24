@@ -23,6 +23,7 @@ from .otp import (
     OtpDeliveryUnavailable,
     WebhookOtpDeliveryBackend,
 )
+from .throttles import GuestUserRateThrottle
 from .tokens import create_password_reset_token, create_refresh_token
 
 
@@ -493,6 +494,9 @@ class AuthenticationApiTests(APITestCase):
 
 
 class GuestUserApiTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+
     def test_create_guest_user_returns_session_key(self):
         response = self.client.post(reverse("guest-users"), {}, format="json")
 
@@ -502,8 +506,44 @@ class GuestUserApiTests(APITestCase):
             response.data["data"]["session_key"],
             GuestUser.objects.get().session_key,
         )
+        self.assertGreater(GuestUser.objects.get().expires_at, timezone.now())
+        self.assertEqual(
+            response.data["data"]["expires_at"],
+            GuestUser.objects.get().expires_at.isoformat().replace("+00:00", "Z"),
+        )
         self.assertEqual(response.data["errors"], {})
         self.assertIsNone(response.data["pagination"])
+
+    def test_create_guest_user_removes_expired_sessions(self):
+        expired_guest = GuestUser.objects.create(
+            session_key="expired-guest-session",
+            expires_at=timezone.now() - timedelta(seconds=1),
+        )
+
+        response = self.client.post(reverse("guest-users"), {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(GuestUser.objects.filter(pk=expired_guest.pk).exists())
+
+    @patch.object(
+        GuestUserRateThrottle,
+        "THROTTLE_RATES",
+        {"guest_user": "2/hour"},
+    )
+    def test_create_guest_user_is_rate_limited(self):
+        responses = [
+            self.client.post(
+                reverse("guest-users"),
+                {},
+                REMOTE_ADDR="192.0.2.10",
+                format="json",
+            )
+            for _ in range(3)
+        ]
+
+        self.assertEqual(responses[0].status_code, status.HTTP_201_CREATED)
+        self.assertEqual(responses[1].status_code, status.HTTP_201_CREATED)
+        self.assertEqual(responses[2].status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
 
 class HeaderTokenAuthenticationTests(APITestCase):
@@ -527,3 +567,21 @@ class HeaderTokenAuthenticationTests(APITestCase):
 
         self.assertEqual(response.data["user_id"], guest_user.id)
         self.assertTrue(response.data["is_anonymous"])
+
+    def test_expired_guest_token_is_rejected(self):
+        guest_user = GuestUser.objects.create(
+            session_key="expired-guest-session",
+            expires_at=timezone.now() - timedelta(seconds=1),
+        )
+
+        class UserEchoView(APIView):
+            def get(self, request):
+                return Response({"user_id": request.user.id})
+
+        request = APIRequestFactory().get(
+            "/",
+            HTTP_X_GUEST_TOKEN=guest_user.session_key,
+        )
+        response = UserEchoView.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

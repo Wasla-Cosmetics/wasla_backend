@@ -382,6 +382,9 @@ msgstr "مستخدم زائر"
 msgid "guest users"
 msgstr "المستخدمون الزائرون"
 
+msgid "expires at"
+msgstr "ينتهي في"
+
 msgid "otp purpose"
 msgstr "غرض رمز التحقق"
 

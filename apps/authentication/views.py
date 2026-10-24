@@ -21,7 +21,11 @@ from apps.authentication.serializers import (
     VerifyOtpSerializer,
     VersionedTokenRefreshSerializer,
 )
-from apps.authentication.throttles import AuthIPRateThrottle, AuthPhoneRateThrottle
+from apps.authentication.throttles import (
+    AuthIPRateThrottle,
+    AuthPhoneRateThrottle,
+    GuestUserRateThrottle,
+)
 from apps.authentication.tokens import create_password_reset_token
 from apps.authentication.utils import (
     generate_successful_auth_response,
@@ -197,3 +201,4 @@ class GuestUserCreateView(CreateAPIView):
     queryset = GuestUser.objects.all()
     serializer_class = GuestUserSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [GuestUserRateThrottle]
