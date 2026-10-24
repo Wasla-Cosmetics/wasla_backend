@@ -23,6 +23,7 @@ ENV=local
 SECRET_KEY=change-me
 ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 CSRF_TRUSTED_ORIGINS=
+TRUSTED_PROXY_COUNT=1
 DEBUG=True
 AUTH_OTP_TTL_MINUTES=10
 AUTH_OTP_DELIVERY_BACKEND=apps.authentication.otp.EmailOtpDeliveryBackend
@@ -97,6 +98,8 @@ Staging and production settings:
 - Enable secure cookie settings.
 - Redirect HTTP to HTTPS by default.
 - Support `CSRF_TRUSTED_ORIGINS`.
+- Require an explicit trusted reverse-proxy count so client IP throttles ignore
+  spoofed `X-Forwarded-For` prefixes.
 
 The included webhook delivery backend sends `{ "phone": ..., "otp": ... }` to
 an HTTPS provider endpoint using the configured bearer token. Staging defaults
@@ -113,6 +116,7 @@ ENV=production
 SECRET_KEY=replace-with-a-random-secret-of-at-least-fifty-characters
 ALLOWED_HOSTS=api.example.com
 CSRF_TRUSTED_ORIGINS=https://api.example.com
+TRUSTED_PROXY_COUNT=2
 AUTH_OTP_DELIVERY_BACKEND=apps.authentication.otp.WebhookOtpDeliveryBackend
 AUTH_OTP_WEBHOOK_URL=https://sms-provider.example.com/otp
 AUTH_OTP_WEBHOOK_TOKEN=replace-with-a-secret

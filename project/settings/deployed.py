@@ -19,6 +19,12 @@ if not ALLOWED_HOSTS:
 if "*" in ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS cannot contain '*' when deployed.")
 
+if REST_FRAMEWORK["NUM_PROXIES"] < 1:
+    raise ImproperlyConfigured(
+        "TRUSTED_PROXY_COUNT must include every trusted reverse proxy in deployed "
+        "environments."
+    )
+
 UNCONFIGURED_OTP_BACKEND = "apps.authentication.otp.UnconfiguredOtpDeliveryBackend"
 WEBHOOK_OTP_BACKEND = "apps.authentication.otp.WebhookOtpDeliveryBackend"
 

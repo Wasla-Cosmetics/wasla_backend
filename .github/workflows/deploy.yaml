@@ -85,6 +85,7 @@ jobs:
           ENV: production
           SECRET_KEY: ci-production-check-secret-key-with-more-than-fifty-characters
           ALLOWED_HOSTS: api.example.com
+          TRUSTED_PROXY_COUNT: "1"
           AUTH_OTP_DELIVERY_BACKEND: apps.authentication.otp.WebhookOtpDeliveryBackend
           AUTH_OTP_WEBHOOK_URL: https://sms.example.com/otp
           AUTH_OTP_WEBHOOK_TOKEN: ci-only-token
@@ -205,6 +206,7 @@ jobs:
             echo "POSTGRES_HOST_PORT=$postgres_host_port"
             echo "ALLOWED_HOSTS=$allowed_hosts"
             echo "CSRF_TRUSTED_ORIGINS=$csrf_origins"
+            echo "TRUSTED_PROXY_COUNT=2"
             echo "COMPOSE_PROFILES=$compose_profiles"
             echo "OTP_DELIVERY_BACKEND=$otp_delivery_backend"
             echo "OTP_WEBHOOK_URL=$otp_webhook_url"
@@ -321,7 +323,7 @@ jobs:
           port: ${{ env.SSH_PORT }}
           username: ${{ env.SSH_USER }}
           password: ${{ env.SSH_PASSWORD }}
-          envs: GIT_BRANCH,DEPLOY_SHA,DEPLOY_PATH,SERVER_NAME,DJANGO_PORT,POSTGRES_HOST_PORT,COMPOSE_PROFILES,ENV,SECRET_KEY,ALLOWED_HOSTS,CSRF_TRUSTED_ORIGINS,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,OTP_DELIVERY_BACKEND,OTP_WEBHOOK_URL,OTP_WEBHOOK_TOKEN,EMAIL_BACKEND,EMAIL_HOST,EMAIL_PORT,EMAIL_HOST_USER,EMAIL_HOST_PASSWORD,EMAIL_USE_TLS,EMAIL_USE_SSL,DEFAULT_FROM_EMAIL,SECURE_HSTS_SECONDS
+          envs: GIT_BRANCH,DEPLOY_SHA,DEPLOY_PATH,SERVER_NAME,DJANGO_PORT,POSTGRES_HOST_PORT,COMPOSE_PROFILES,ENV,SECRET_KEY,ALLOWED_HOSTS,CSRF_TRUSTED_ORIGINS,TRUSTED_PROXY_COUNT,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,OTP_DELIVERY_BACKEND,OTP_WEBHOOK_URL,OTP_WEBHOOK_TOKEN,EMAIL_BACKEND,EMAIL_HOST,EMAIL_PORT,EMAIL_HOST_USER,EMAIL_HOST_PASSWORD,EMAIL_USE_TLS,EMAIL_USE_SSL,DEFAULT_FROM_EMAIL,SECURE_HSTS_SECONDS
           script: |
             set -euo pipefail
             cd "$DEPLOY_PATH"
@@ -352,6 +354,7 @@ jobs:
             write_env_var SECRET_KEY "$SECRET_KEY"
             write_env_var ALLOWED_HOSTS "$ALLOWED_HOSTS"
             write_env_var CSRF_TRUSTED_ORIGINS "$CSRF_TRUSTED_ORIGINS"
+            write_env_var TRUSTED_PROXY_COUNT "$TRUSTED_PROXY_COUNT"
             write_env_var DEBUG "False"
             write_env_var SESSION_COOKIE_SECURE "True"
             write_env_var CSRF_COOKIE_SECURE "True"
@@ -384,5 +387,5 @@ jobs:
 
             docker compose config --quiet
             docker compose build
-            docker compose up -d --remove-orphans
+            docker compose up -d --remove-orphans --wait --wait-timeout 180
             docker compose ps

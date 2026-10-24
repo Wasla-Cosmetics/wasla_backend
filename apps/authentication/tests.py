@@ -3,6 +3,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
@@ -23,6 +24,7 @@ from .otp import (
     OtpDeliveryUnavailable,
     WebhookOtpDeliveryBackend,
 )
+from .throttles import AuthIPRateThrottle, GuestUserRateThrottle
 from .tokens import create_password_reset_token, create_refresh_token
 
 
@@ -82,6 +84,45 @@ class WebhookOtpDeliveryBackendTests(SimpleTestCase):
         )
         self.assertEqual(request.get_header("Authorization"), "Bearer secret-token")
         self.assertEqual(mocked_urlopen.call_args.kwargs["timeout"], 4)
+
+
+class AuthIPRateThrottleTests(SimpleTestCase):
+    def test_direct_requests_ignore_untrusted_forwarded_for_header(self):
+        request = APIRequestFactory().post(
+            "/api/auth/login/",
+            {},
+            REMOTE_ADDR="192.0.2.10",
+            HTTP_X_FORWARDED_FOR="203.0.113.99",
+        )
+
+        self.assertEqual(AuthIPRateThrottle().get_ident(request), "192.0.2.10")
+
+    @override_settings(
+        REST_FRAMEWORK={
+            **settings.REST_FRAMEWORK,
+            "NUM_PROXIES": 2,
+        }
+    )
+    def test_deployed_requests_ignore_values_before_trusted_proxy_chain(self):
+        throttle = AuthIPRateThrottle()
+        first_request = APIRequestFactory().post(
+            "/api/auth/login/",
+            {},
+            REMOTE_ADDR="172.18.0.2",
+            HTTP_X_FORWARDED_FOR="203.0.113.1, 192.0.2.10, 127.0.0.1",
+        )
+        second_request = APIRequestFactory().post(
+            "/api/auth/login/",
+            {},
+            REMOTE_ADDR="172.18.0.2",
+            HTTP_X_FORWARDED_FOR="203.0.113.2, 192.0.2.10, 127.0.0.1",
+        )
+
+        self.assertEqual(throttle.get_ident(first_request), "192.0.2.10")
+        self.assertEqual(
+            throttle.get_cache_key(first_request, None),
+            throttle.get_cache_key(second_request, None),
+        )
 
 
 @override_settings(
@@ -362,6 +403,17 @@ class AuthenticationApiTests(APITestCase):
             inactive_response.data["errors"],
         )
 
+    @patch("apps.authentication.serializers.User.set_password")
+    def test_login_hashes_password_for_unknown_phone(self, mocked_set_password):
+        response = self.client.post(
+            reverse("login"),
+            {"phone": "+201000000099", "password": "WrongPass123!"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mocked_set_password.assert_called_once_with("WrongPass123!")
+
     def test_logout_rejects_refresh_token_owned_by_another_user(self):
         user = self.user_model.objects.create_user(
             phone="+201000000023",
@@ -482,6 +534,9 @@ class AuthenticationApiTests(APITestCase):
 
 
 class GuestUserApiTests(APITestCase):
+    def setUp(self):
+        cache.clear()
+
     def test_create_guest_user_returns_session_key(self):
         response = self.client.post(reverse("guest-users"), {}, format="json")
 
@@ -491,8 +546,44 @@ class GuestUserApiTests(APITestCase):
             response.data["data"]["session_key"],
             GuestUser.objects.get().session_key,
         )
+        self.assertGreater(GuestUser.objects.get().expires_at, timezone.now())
+        self.assertEqual(
+            response.data["data"]["expires_at"],
+            GuestUser.objects.get().expires_at.isoformat().replace("+00:00", "Z"),
+        )
         self.assertEqual(response.data["errors"], {})
         self.assertIsNone(response.data["pagination"])
+
+    def test_create_guest_user_removes_expired_sessions(self):
+        expired_guest = GuestUser.objects.create(
+            session_key="expired-guest-session",
+            expires_at=timezone.now() - timedelta(seconds=1),
+        )
+
+        response = self.client.post(reverse("guest-users"), {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertFalse(GuestUser.objects.filter(pk=expired_guest.pk).exists())
+
+    @patch.object(
+        GuestUserRateThrottle,
+        "THROTTLE_RATES",
+        {"guest_user": "2/hour"},
+    )
+    def test_create_guest_user_is_rate_limited(self):
+        responses = [
+            self.client.post(
+                reverse("guest-users"),
+                {},
+                REMOTE_ADDR="192.0.2.10",
+                format="json",
+            )
+            for _ in range(3)
+        ]
+
+        self.assertEqual(responses[0].status_code, status.HTTP_201_CREATED)
+        self.assertEqual(responses[1].status_code, status.HTTP_201_CREATED)
+        self.assertEqual(responses[2].status_code, status.HTTP_429_TOO_MANY_REQUESTS)
 
 
 class HeaderTokenAuthenticationTests(APITestCase):
@@ -516,3 +607,21 @@ class HeaderTokenAuthenticationTests(APITestCase):
 
         self.assertEqual(response.data["user_id"], guest_user.id)
         self.assertTrue(response.data["is_anonymous"])
+
+    def test_expired_guest_token_is_rejected(self):
+        guest_user = GuestUser.objects.create(
+            session_key="expired-guest-session",
+            expires_at=timezone.now() - timedelta(seconds=1),
+        )
+
+        class UserEchoView(APIView):
+            def get(self, request):
+                return Response({"user_id": request.user.id})
+
+        request = APIRequestFactory().get(
+            "/",
+            HTTP_X_GUEST_TOKEN=guest_user.session_key,
+        )
+        response = UserEchoView.as_view()(request)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

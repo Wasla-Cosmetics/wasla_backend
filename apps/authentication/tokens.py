@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
+from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
@@ -25,7 +26,10 @@ def get_guest_user(token):
         return None
 
     try:
-        return GuestUser.objects.get(session_key=token)
+        return GuestUser.objects.get(
+            session_key=token,
+            expires_at__gt=timezone.now(),
+        )
     except GuestUser.DoesNotExist:
         return None
 

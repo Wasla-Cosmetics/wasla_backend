@@ -1,9 +1,17 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from apps.authentication.managers import UserManager
 from apps.core.models import TimeStampedModel
+
+
+def guest_user_expiration():
+    return timezone.now() + timedelta(days=settings.GUEST_USER_TTL_DAYS)
 
 
 class User(AbstractUser, TimeStampedModel):
@@ -36,6 +44,11 @@ class User(AbstractUser, TimeStampedModel):
 
 class GuestUser(TimeStampedModel):
     session_key = models.CharField(_("session key"), max_length=40, unique=True)
+    expires_at = models.DateTimeField(
+        _("expires at"),
+        default=guest_user_expiration,
+        db_index=True,
+    )
 
     @property
     def is_anonymous(self):

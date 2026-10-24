@@ -13,6 +13,10 @@ class AuthIPRateThrottle(SimpleRateThrottle):
         }
 
 
+class GuestUserRateThrottle(AuthIPRateThrottle):
+    scope = "guest_user"
+
+
 class AuthPhoneRateThrottle(SimpleRateThrottle):
     scope = "auth_phone"
 

@@ -55,13 +55,17 @@ container startup Django runs:
 ```bash
 python manage.py collectstatic --no-input
 python manage.py migrate
-gunicorn project.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2 --timeout 0
+gunicorn project.asgi:application -k uvicorn_worker.UvicornWorker --bind 0.0.0.0:8000 --workers 2 --timeout 0
 ```
 
 The migration step also ensures `default.jpeg` exists in the configured media
 storage without replacing an existing customized file.
 
 Docker Compose forces Django to use Postgres because the stack includes a Postgres service.
+The Nginx healthcheck calls Django through the internal proxy using an explicit
+IPv4 loopback address and the forwarded HTTPS scheme used by deployed traffic.
+Deployments wait for service health and fail instead of succeeding with an
+unhealthy proxy.
 
 ## Useful URLs
 
