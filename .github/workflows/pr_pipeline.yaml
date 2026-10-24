@@ -68,6 +68,7 @@ jobs:
           ENV: production
           SECRET_KEY: ci-production-check-secret-key-with-more-than-fifty-characters
           ALLOWED_HOSTS: api.example.com
+          TRUSTED_PROXY_COUNT: "1"
           AUTH_OTP_DELIVERY_BACKEND: apps.authentication.otp.WebhookOtpDeliveryBackend
           AUTH_OTP_WEBHOOK_URL: https://sms.example.com/otp
           AUTH_OTP_WEBHOOK_TOKEN: ci-only-token

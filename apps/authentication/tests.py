@@ -3,6 +3,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
@@ -23,7 +24,7 @@ from .otp import (
     OtpDeliveryUnavailable,
     WebhookOtpDeliveryBackend,
 )
-from .throttles import GuestUserRateThrottle
+from .throttles import AuthIPRateThrottle, GuestUserRateThrottle
 from .tokens import create_password_reset_token, create_refresh_token
 
 
@@ -83,6 +84,45 @@ class WebhookOtpDeliveryBackendTests(SimpleTestCase):
         )
         self.assertEqual(request.get_header("Authorization"), "Bearer secret-token")
         self.assertEqual(mocked_urlopen.call_args.kwargs["timeout"], 4)
+
+
+class AuthIPRateThrottleTests(SimpleTestCase):
+    def test_direct_requests_ignore_untrusted_forwarded_for_header(self):
+        request = APIRequestFactory().post(
+            "/api/auth/login/",
+            {},
+            REMOTE_ADDR="192.0.2.10",
+            HTTP_X_FORWARDED_FOR="203.0.113.99",
+        )
+
+        self.assertEqual(AuthIPRateThrottle().get_ident(request), "192.0.2.10")
+
+    @override_settings(
+        REST_FRAMEWORK={
+            **settings.REST_FRAMEWORK,
+            "NUM_PROXIES": 2,
+        }
+    )
+    def test_deployed_requests_ignore_values_before_trusted_proxy_chain(self):
+        throttle = AuthIPRateThrottle()
+        first_request = APIRequestFactory().post(
+            "/api/auth/login/",
+            {},
+            REMOTE_ADDR="172.18.0.2",
+            HTTP_X_FORWARDED_FOR="203.0.113.1, 192.0.2.10, 127.0.0.1",
+        )
+        second_request = APIRequestFactory().post(
+            "/api/auth/login/",
+            {},
+            REMOTE_ADDR="172.18.0.2",
+            HTTP_X_FORWARDED_FOR="203.0.113.2, 192.0.2.10, 127.0.0.1",
+        )
+
+        self.assertEqual(throttle.get_ident(first_request), "192.0.2.10")
+        self.assertEqual(
+            throttle.get_cache_key(first_request, None),
+            throttle.get_cache_key(second_request, None),
+        )
 
 
 @override_settings(

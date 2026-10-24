@@ -217,6 +217,7 @@ AUTH_OTP_WEBHOOK_TIMEOUT_SECONDS = int(
 )
 PASSWORD_RESET_TIMEOUT = int(env.get("PASSWORD_RESET_TIMEOUT", "600"))
 GUEST_USER_TTL_DAYS = int(env.get("GUEST_USER_TTL_DAYS", "30"))
+TRUSTED_PROXY_COUNT = int(env.get("TRUSTED_PROXY_COUNT", "0"))
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -225,6 +226,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "apps.core.pagination.StandardPageNumberPagination",
     "EXCEPTION_HANDLER": "project.exception_handler.custom_exception_handler",
     "COERCE_DECIMAL_TO_STRING": False,
+    "NUM_PROXIES": TRUSTED_PROXY_COUNT,
     "PAGE_SIZE": 10,
     "DEFAULT_THROTTLE_RATES": {
         "auth_ip": env.get("AUTH_IP_THROTTLE_RATE", "20/minute"),
