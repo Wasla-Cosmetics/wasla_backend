@@ -60,6 +60,36 @@ python -m black --check project apps
 python manage.py runserver
 ```
 
+## Seed Data
+
+Create or refresh bilingual development data:
+
+```bash
+python manage.py seed_data
+```
+
+The command is idempotent and seeds users, a guest user, ads, hierarchical
+categories, products, product images, and product reviews. It never deletes
+existing records and refuses to run when `ENV` is staging or production.
+
+The default demo accounts are:
+
+```text
+Admin:     +201000000001
+Customer:  +201000000002
+Customer:  +201000000003
+Password:  WaslaDemo123!
+```
+
+Set another password for all seeded accounts with:
+
+```bash
+python manage.py seed_data --password "AnotherStrongPassword123!"
+```
+
+Operational cache rows and third-party token/session tables are intentionally
+not seeded.
+
 ## Docker Stack
 
 ```bash

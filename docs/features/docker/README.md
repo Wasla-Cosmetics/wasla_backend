@@ -90,6 +90,12 @@ Create a superuser inside Docker:
 docker compose exec django python manage.py createsuperuser
 ```
 
+Create or refresh development seed data:
+
+```bash
+docker compose exec django python manage.py seed_data
+```
+
 Run checks inside Docker:
 
 ```bash
