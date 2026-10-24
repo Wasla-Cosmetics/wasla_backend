@@ -143,3 +143,15 @@ jobs:
 
       - name: Verify writable application volumes
         run: tests/integration/test_volume_initialization.sh
+
+  nginx-healthcheck:
+    name: Nginx production healthcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Nginx healthcheck through Django
+        run: tests/integration/test_nginx_healthcheck.sh
