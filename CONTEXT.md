@@ -3,6 +3,26 @@
 Wasla's catalog language defines how products, prices, and customer-facing
 offers are understood across the storefront.
 
+## Catalog Ownership
+
+**Brand**:
+The customer-facing catalog owner. A Brand contains one or more Branches.
+_Avoid_: Manufacturer, Store
+
+**Branch**:
+A catalog location owned by one Brand, with its own Category hierarchy.
+_Avoid_: Outlet, Global branch
+
+**Category**:
+A node in one Branch's product hierarchy. A parent Category always belongs to
+the same Branch.
+_Avoid_: Global category, Branch category
+
+**Product**:
+A sellable catalog item assigned to one Category. Its Branch and Brand are
+inherited from that Category.
+_Avoid_: Branch product, Product listing
+
 ## Pricing
 
 **Default price**:

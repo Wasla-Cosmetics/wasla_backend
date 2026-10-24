@@ -1,4 +1,5 @@
 from django.db import IntegrityError, transaction
+from django.db.models.deletion import ProtectedError
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import APIException
@@ -9,11 +10,13 @@ from rest_framework.viewsets import ModelViewSet
 from apps.core.pagination import StandardPageNumberPagination
 from apps.core.permissions import IsAdminOrReadOnly, IsReviewOwnerOrAdminOrReadOnly
 from apps.core.serializers import AllLanguagesModelSerializer
-from apps.store.filters import ProductFilter
-from apps.store.models import Ad, Category, Product, ProductReview
+from apps.store.filters import BrandFilter, BranchFilter, CategoryFilter, ProductFilter
+from apps.store.models import Ad, Brand, Branch, Category, Product, ProductReview
 from apps.store.search import hydrate_search_results, search_catalog
 from apps.store.serializers import (
     AdSerializer,
+    BrandSerializer,
+    BranchSerializer,
     CatalogSearchQuerySerializer,
     CatalogSearchResultSerializer,
     CategorySerializer,
@@ -27,6 +30,20 @@ class ReviewAlreadyExists(APIException):
     status_code = 409
     default_detail = {"product_id": _("You already reviewed this product.")}
     default_code = "review_already_exists"
+
+
+class CatalogResourceInUse(APIException):
+    status_code = 409
+    default_detail = _("This catalog resource is in use and cannot be deleted.")
+    default_code = "catalog_resource_in_use"
+
+
+class ProtectedDestroyMixin:
+    def perform_destroy(self, instance):
+        try:
+            instance.delete()
+        except ProtectedError as exc:
+            raise CatalogResourceInUse() from exc
 
 
 class CatalogSearchPagination(StandardPageNumberPagination):
@@ -70,14 +87,34 @@ class AdViewSet(ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 
+class BrandViewSet(ProtectedDestroyMixin, ModelViewSet):
+    queryset = Brand.objects.all()
+    serializer_class = BrandSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = BrandFilter
+
+
+class BranchViewSet(ProtectedDestroyMixin, ModelViewSet):
+    queryset = Branch.objects.select_related("brand")
+    serializer_class = BranchSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = BranchFilter
+
+
 class CategoryViewSet(ModelViewSet):
-    queryset = Category.objects.all()
+    queryset = Category.objects.select_related("branch__brand")
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = CategoryFilter
 
 
 class ProductViewSet(ModelViewSet):
-    queryset = Product.objects.select_related("category").prefetch_related("images")
+    queryset = Product.objects.select_related(
+        "category__branch__brand"
+    ).prefetch_related("images")
     serializer_class = ProductSerializer
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]

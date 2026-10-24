@@ -2,7 +2,15 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.core.serializers import AllLanguagesModelSerializer
-from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
+from apps.store.models import (
+    Ad,
+    Brand,
+    Branch,
+    Category,
+    Product,
+    ProductImage,
+    ProductReview,
+)
 from apps.store.search import CATALOG_SEARCH_TYPES
 
 
@@ -18,7 +26,7 @@ class CatalogSearchQuerySerializer(serializers.Serializer):
             result_type not in CATALOG_SEARCH_TYPES for result_type in result_types
         ):
             raise serializers.ValidationError(
-                _("Choose only from product, category, and ad.")
+                _("Choose only from product, category, brand, branch, and ad.")
             )
         return result_types
 
@@ -38,10 +46,76 @@ class AdSerializer(AllLanguagesModelSerializer):
         ]
 
 
+class BrandSerializer(AllLanguagesModelSerializer):
+    class Meta:
+        model = Brand
+        fields = ["id", "title", "image", "created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at"]
+
+
+class BranchSerializer(AllLanguagesModelSerializer):
+    brand = BrandSerializer(read_only=True)
+    brand_id = serializers.PrimaryKeyRelatedField(
+        queryset=Brand.objects.all(),
+        source="brand",
+        write_only=True,
+    )
+
+    class Meta:
+        model = Branch
+        fields = [
+            "id",
+            "brand_id",
+            "brand",
+            "title",
+            "image",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+
 class CategorySerializer(AllLanguagesModelSerializer):
+    branch = BranchSerializer(read_only=True)
+    branch_id = serializers.PrimaryKeyRelatedField(
+        queryset=Branch.objects.all(),
+        source="branch",
+        write_only=True,
+    )
+
     class Meta:
         model = Category
-        fields = ["id", "title", "image", "parent"]
+        fields = ["id", "branch_id", "branch", "title", "image", "parent"]
+
+    def validate(self, attrs):
+        branch = attrs.get(
+            "branch",
+            self.instance.branch if self.instance else None,
+        )
+        parent = attrs.get(
+            "parent",
+            self.instance.parent if self.instance else None,
+        )
+
+        if parent and branch and parent.branch_id != branch.id:
+            raise serializers.ValidationError(
+                {"parent": _("Category and parent must belong to the same branch.")}
+            )
+
+        if (
+            self.instance
+            and branch
+            and self.instance.subcategories.exclude(branch=branch).exists()
+        ):
+            raise serializers.ValidationError(
+                {
+                    "branch_id": _(
+                        "Category and children must belong to the same branch."
+                    )
+                }
+            )
+
+        return attrs
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -154,6 +228,8 @@ class CatalogSearchResultSerializer(serializers.Serializer):
     serializer_classes = {
         "product": ProductSerializer,
         "category": CategorySerializer,
+        "brand": BrandSerializer,
+        "branch": BranchSerializer,
         "ad": AdSerializer,
     }
 

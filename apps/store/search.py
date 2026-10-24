@@ -1,9 +1,9 @@
 from django.db.models import Case, CharField, F, IntegerField, Q, Value, When
 
 from apps.core.translation import get_localized_field_names
-from apps.store.models import Ad, Category, Product
+from apps.store.models import Ad, Brand, Branch, Category, Product
 
-CATALOG_SEARCH_TYPES = ("product", "category", "ad")
+CATALOG_SEARCH_TYPES = ("product", "category", "brand", "branch", "ad")
 
 SEARCH_CONFIG = {
     "product": {
@@ -18,11 +18,23 @@ SEARCH_CONFIG = {
         "secondary_fields": (),
         "type_order": 1,
     },
+    "brand": {
+        "model": Brand,
+        "title_fields": ("title",),
+        "secondary_fields": (),
+        "type_order": 2,
+    },
+    "branch": {
+        "model": Branch,
+        "title_fields": ("title",),
+        "secondary_fields": (),
+        "type_order": 3,
+    },
     "ad": {
         "model": Ad,
         "title_fields": ("title",),
         "secondary_fields": ("subtitle",),
-        "type_order": 2,
+        "type_order": 4,
     },
 }
 
@@ -83,10 +95,14 @@ def hydrate_search_results(rows):
         ids_by_type[row["result_type"]].append(row["object_id"])
 
     objects_by_type = {
-        "product": Product.objects.select_related("category")
+        "product": Product.objects.select_related("category__branch__brand")
         .prefetch_related("images")
         .in_bulk(ids_by_type["product"]),
-        "category": Category.objects.in_bulk(ids_by_type["category"]),
+        "category": Category.objects.select_related("branch__brand").in_bulk(
+            ids_by_type["category"]
+        ),
+        "brand": Brand.objects.in_bulk(ids_by_type["brand"]),
+        "branch": Branch.objects.select_related("brand").in_bulk(ids_by_type["branch"]),
         "ad": Ad.objects.in_bulk(ids_by_type["ad"]),
     }
 

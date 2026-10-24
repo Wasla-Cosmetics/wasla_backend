@@ -10,7 +10,15 @@ from django.test import SimpleTestCase, TestCase, override_settings
 
 from apps.authentication.models import GuestUser, User
 from apps.core.signals import ensure_default_media
-from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
+from apps.store.models import (
+    Ad,
+    Brand,
+    Branch,
+    Category,
+    Product,
+    ProductImage,
+    ProductReview,
+)
 
 
 class SeedDataCommandTests(TestCase):
@@ -23,12 +31,18 @@ class SeedDataCommandTests(TestCase):
         self.assertEqual(User.objects.count(), 3)
         self.assertEqual(GuestUser.objects.count(), 1)
         self.assertEqual(Ad.objects.count(), 2)
+        self.assertEqual(Brand.objects.count(), 1)
+        self.assertEqual(Branch.objects.count(), 1)
         self.assertEqual(Category.objects.count(), 6)
         self.assertEqual(Product.objects.count(), 6)
         self.assertEqual(ProductImage.objects.count(), 12)
         self.assertEqual(ProductReview.objects.count(), 6)
         self.assertTrue(User.objects.filter(is_superuser=True, is_staff=True).exists())
         self.assertTrue(Category.objects.filter(parent__isnull=False).exists())
+        self.assertFalse(Category.objects.filter(branch__isnull=True).exists())
+        self.assertFalse(
+            Product.objects.filter(category__branch__brand__isnull=True).exists()
+        )
         self.assertTrue(Product.objects.filter(compare_at_price__isnull=False).exists())
         self.assertFalse(Product.objects.filter(title_en__isnull=True).exists())
         self.assertFalse(Product.objects.filter(title_ar__isnull=True).exists())
@@ -50,6 +64,30 @@ class SeedDataCommandTests(TestCase):
 
         self.assertEqual(self._domain_model_counts(), first_counts)
 
+    def test_keeps_same_named_categories_in_other_branches(self):
+        other_brand = Brand.objects.create(title_en="Other Brand")
+        other_branch = Branch.objects.create(
+            brand=other_brand,
+            title_en="Other Branch",
+        )
+        other_category = Category.objects.create(
+            branch=other_branch,
+            title_en="Skincare",
+        )
+
+        with patch.dict(os.environ, {"ENV": "local"}):
+            call_command("seed_data", stdout=StringIO())
+
+        other_category.refresh_from_db()
+        self.assertEqual(other_category.branch, other_branch)
+        self.assertTrue(
+            Category.objects.filter(
+                branch__brand__title_en="Wasla",
+                branch__title_en="Main Branch",
+                title_en="Skincare",
+            ).exists()
+        )
+
     def test_refuses_to_seed_staging_or_production(self):
         for environment in ("staging", "production"):
             with self.subTest(environment=environment), patch.dict(
@@ -69,6 +107,8 @@ class SeedDataCommandTests(TestCase):
                 User,
                 GuestUser,
                 Ad,
+                Brand,
+                Branch,
                 Category,
                 Product,
                 ProductImage,
