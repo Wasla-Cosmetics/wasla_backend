@@ -362,6 +362,17 @@ class AuthenticationApiTests(APITestCase):
             inactive_response.data["errors"],
         )
 
+    @patch("apps.authentication.serializers.User.set_password")
+    def test_login_hashes_password_for_unknown_phone(self, mocked_set_password):
+        response = self.client.post(
+            reverse("login"),
+            {"phone": "+201000000099", "password": "WrongPass123!"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mocked_set_password.assert_called_once_with("WrongPass123!")
+
     def test_logout_rejects_refresh_token_owned_by_another_user(self):
         user = self.user_model.objects.create_user(
             phone="+201000000023",

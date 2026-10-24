@@ -43,6 +43,7 @@ class LoginSerializer(serializers.Serializer):
         try:
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
+            User().set_password(password)
             raise serializers.ValidationError(_("Invalid credentials."))
 
         if not user.check_password(password):
