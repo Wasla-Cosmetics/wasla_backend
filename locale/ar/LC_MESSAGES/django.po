@@ -88,10 +88,6 @@ msgstr "الاسم الكامل"
 msgid "active"
 msgstr "نشط"
 
-#: apps/authentication/models.py:13 apps/store/models.py:61
-msgid "points"
-msgstr "النقاط"
-
 #: apps/authentication/models.py:14
 msgid "otp"
 msgstr "رمز التحقق"
@@ -110,25 +106,9 @@ msgstr "تاريخ الإنشاء"
 msgid "updated at"
 msgstr "تاريخ التحديث"
 
-#: apps/authentication/models.py:23
-msgid "authenticated user"
-msgstr "مستخدم موثق"
-
-#: apps/authentication/models.py:24
-msgid "authenticated users"
-msgstr "المستخدمون الموثقون"
-
 #: apps/authentication/models.py:31
 msgid "session key"
 msgstr "مفتاح الجلسة"
-
-#: apps/authentication/models.py:44
-msgid "anonymous user"
-msgstr "مستخدم مجهول"
-
-#: apps/authentication/models.py:45
-msgid "anonymous users"
-msgstr "المستخدمون المجهولون"
 
 #: apps/authentication/admin.py:19
 msgid "Personal info"
@@ -145,34 +125,6 @@ msgstr "الصلاحيات"
 #: apps/authentication/admin.py:34
 msgid "Important dates"
 msgstr "التواريخ المهمة"
-
-#: apps/authentication/authentication.py:20
-msgid "Invalid anonymous token."
-msgstr "الرمز المجهول غير صالح."
-
-#: apps/authentication/serializers.py:23 apps/authentication/serializers.py:55
-msgid "Phone number not found"
-msgstr "رقم الهاتف غير موجود"
-
-#: apps/authentication/serializers.py:26
-msgid "Invalid password."
-msgstr "كلمة المرور غير صحيحة."
-
-#: apps/authentication/serializers.py:53
-msgid "Invalid action"
-msgstr "الإجراء غير صالح"
-
-#: apps/authentication/serializers.py:58
-msgid "Invalid OTP"
-msgstr "رمز التحقق غير صالح"
-
-#: apps/authentication/serializers.py:65
-msgid "OTP has expired"
-msgstr "انتهت صلاحية رمز التحقق"
-
-#: apps/authentication/serializers.py:89
-msgid "Phone number does not match authenticated user"
-msgstr "رقم الهاتف لا يطابق المستخدم المصادق عليه"
 
 #: apps/authentication/serializers.py:93 apps/authentication/serializers.py:125
 msgid "Passwords do not match"
@@ -295,10 +247,6 @@ msgstr "التصنيفات"
 msgid "description"
 msgstr "الوصف"
 
-#: apps/store/models.py:58
-msgid "quantity"
-msgstr "الكمية"
-
 #: apps/store/models.py:64
 msgid "default price"
 msgstr "السعر الافتراضي"
@@ -327,9 +275,6 @@ msgstr "مدخلات ذاكرة التخزين المؤقت لتقييد طلب�
 
 msgid "Compare-at price must be greater than the default price."
 msgstr "يجب أن يكون السعر قبل الخصم أكبر من السعر الافتراضي."
-
-msgid "Choose only from product, category, and ad."
-msgstr "اختر فقط من المنتج أو الفئة أو الإعلان."
 
 msgid "Choose only from product, category, brand, branch, and ad."
 msgstr "اختر فقط من المنتج أو التصنيف أو العلامة التجارية أو الفرع أو الإعلان."

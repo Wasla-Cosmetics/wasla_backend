@@ -64,7 +64,7 @@ Feature and workflow documentation lives in focused README files:
 │   ├── settings/
 │   ├── asgi.py
 │   ├── urls.py
-│   └── wsgi.py
+│   └── exception_handler.py
 ├── requirements/
 ├── Dockerfile
 ├── docker-compose.yaml

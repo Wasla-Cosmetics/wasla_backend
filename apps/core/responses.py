@@ -5,7 +5,6 @@ from rest_framework import status
 
 EMPTY_VALUES = (None, "", [], {})
 ENVELOPE_KEYS = {"status", "message", "data"}
-PAGINATION_KEYS = {"count", "next", "previous", "results"}
 
 
 def build_response(status_code, message=None, data=None, errors=None, pagination=None):
@@ -28,10 +27,6 @@ def is_enveloped(data):
     return isinstance(data, Mapping) and ENVELOPE_KEYS.issubset(data.keys())
 
 
-def is_paginated(data):
-    return isinstance(data, Mapping) and PAGINATION_KEYS.issubset(data.keys())
-
-
 def normalize_response_payload(data, status_code):
     if is_enveloped(data):
         return {
@@ -49,17 +44,6 @@ def normalize_response_payload(data, status_code):
             message=message,
             data={},
             errors=errors,
-        )
-
-    if is_paginated(data):
-        return build_response(
-            status_code=status_code,
-            data=data["results"],
-            pagination={
-                "count": data["count"],
-                "next": data["next"],
-                "previous": data["previous"],
-            },
         )
 
     return build_response(status_code=status_code, data=data)
