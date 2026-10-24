@@ -4,12 +4,37 @@ Authentication routes are mounted under `/api/auth/` and use bearer JWTs.
 Access tokens expire after 10 minutes; refresh tokens expire after 30 days and
 rotate through `POST /api/auth/token/refresh/`.
 
+## API Routes
+
+| Method | Route | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth/register/` | Public | Create an inactive account and send its registration OTP. |
+| `POST` | `/api/auth/verify-otp/` | Public | Activate registration or issue a password-reset token. |
+| `POST` | `/api/auth/login/` | Public | Issue access and refresh JWTs. |
+| `POST` | `/api/auth/token/refresh/` | Public | Rotate a valid refresh token. |
+| `POST` | `/api/auth/send-otp/` | Public | Request an OTP without disclosing account state. |
+| `POST` | `/api/auth/reset-password/` | Public | Reset a password with a reset token. |
+| `GET`, `PUT`, `PATCH` | `/api/auth/profile/` | User | Read or update the current profile. |
+| `POST` | `/api/auth/change-password/` | User | Change the current password. |
+| `POST` | `/api/auth/logout/` | User | Blacklist the submitted refresh token. |
+| `POST` | `/api/auth/delete-account/` | User | Delete the account after password confirmation. |
+| `POST` | `/api/auth/guest-users/` | Public | Create an expiring guest session. |
+| CRUD | `/api/auth/users/` | Admin | Manage users; list results can be filtered by exact `phone`. |
+
+Registration accepts `phone`, `email`, `full_name`, and `password`. Profile
+updates cannot change the phone number or password; use the dedicated password
+endpoint instead. Login accepts `phone` and `password`.
+
 ## OTP Flow
 
 Registration and password reset use six-digit, purpose-bound OTPs. Only a
 password hash of the OTP is stored, and the OTP is cleared after successful
 verification or failed delivery. Authentication endpoints are throttled by
 both client IP and normalized phone number.
+
+For an inactive account, `send-otp` issues a registration OTP. For an active
+account, it issues a password-reset OTP. Its response remains generic so callers
+cannot use it to discover whether an account exists or is active.
 
 Settings remain fail-closed with an unconfigured delivery backend until one is
 selected. The provided Docker development configuration selects
@@ -45,13 +70,16 @@ The reset flow is deliberately separate from login:
 4. `POST /api/auth/reset-password/` with `reset_token`, `password`, and
    `confirm_password`.
 
-Changing or resetting a password increments the user's token version and
-blacklists outstanding refresh tokens, invalidating previously issued access
-and refresh tokens. Logout accepts only a refresh token belonging to the
-authenticated user.
+Login failures also use a generic response so the API does not disclose whether
+a phone number belongs to an active account.
 
-Login and OTP-request failures use generic responses where necessary so the
-API does not disclose whether a phone number belongs to an active account.
+## Token Revocation
+
+Access tokens carry the user's current token version. Changing or resetting a
+password increments that version and blacklists the user's outstanding refresh
+tokens. Deleting the account invalidates it entirely. Logout validates that the
+submitted refresh token belongs to the authenticated user before blacklisting
+that token.
 
 ## Guest Sessions
 
@@ -60,3 +88,13 @@ yet have an account. Creation is rate limited per client IP, sessions expire
 after the configured retention period, and expired rows are removed whenever a
 new guest session is created. The response includes `expires_at`; send the
 session key in `X-Guest-Token` while it remains valid.
+
+Guest sessions are anonymous for permission checks. They cannot create product
+reviews or call user-only endpoints.
+
+## Throttling
+
+Registration, login, OTP, reset, and token-refresh requests are throttled by
+both trusted client IP and normalized phone number. Guest creation has its own
+IP throttle. Rates are configured with `AUTH_IP_THROTTLE_RATE`,
+`AUTH_PHONE_THROTTLE_RATE`, and `GUEST_USER_THROTTLE_RATE`.

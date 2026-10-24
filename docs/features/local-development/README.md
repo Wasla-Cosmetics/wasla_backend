@@ -1,6 +1,8 @@
 # Local Development
 
 The local development workflow uses a Python virtual environment and SQLite.
+Docker remains the reference workflow for PostgreSQL and deployment-like
+behavior.
 
 ## Setup
 
@@ -25,6 +27,10 @@ DATABASE_TYPE=sqlite3
 SQLITE_NAME=db.sqlite3
 EMAIL_HOST=127.0.0.1
 ```
+
+Start from `.env.example`, then replace its database values with the SQLite
+values above. Keep `AUTH_OTP_DELIVERY_BACKEND` set to
+`apps.authentication.otp.EmailOtpDeliveryBackend` when using Mailpit.
 
 Start only Mailpit when Django runs from the virtual environment:
 
@@ -65,3 +71,15 @@ Run system checks:
 ```bash
 python manage.py check
 ```
+
+Run migrations validation, tests, and formatting checks before committing:
+
+```bash
+python manage.py makemigrations --check --dry-run
+python manage.py test
+python -m black --check .
+```
+
+SQLite does not exercise PostgreSQL-specific behavior. Verify query,
+constraint, migration, and transaction changes through the Docker workflow or
+the PostgreSQL CI job.

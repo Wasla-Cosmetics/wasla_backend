@@ -45,6 +45,10 @@ EMAIL_USE_TLS=False
 EMAIL_USE_SSL=False
 EMAIL_TIMEOUT_SECONDS=10
 DEFAULT_FROM_EMAIL=no-reply@wasla.local
+SECURE_SSL_REDIRECT=False
+SECURE_HSTS_SECONDS=0
+SECURE_HSTS_INCLUDE_SUBDOMAINS=False
+SECURE_HSTS_PRELOAD=False
 
 DATABASE_TYPE=postgres
 
@@ -69,6 +73,10 @@ For local commands without Docker, use SQLite:
 DATABASE_TYPE=sqlite3
 SQLITE_NAME=db.sqlite3
 ```
+
+Boolean environment values accept `1`, `true`, `yes`, or `on`
+case-insensitively; other supplied values are false. Comma-separated host and
+origin settings are trimmed and empty entries are ignored.
 
 ## Ngrok And CSRF
 
@@ -101,6 +109,7 @@ Staging and production settings:
 - Enable secure cookie settings.
 - Redirect HTTP to HTTPS by default.
 - Support `CSRF_TRUSTED_ORIGINS`.
+- Apply HSTS defaults of one day in staging and one year in production.
 - Require an explicit trusted reverse-proxy count so client IP throttles ignore
   spoofed `X-Forwarded-For` prefixes.
 
@@ -153,3 +162,18 @@ To select real SMTP email delivery later, set the environment-specific
 Prefix every name with `STAGE_` or `MASTER_`, matching the target GitHub
 environment. SMTP username and password are required for deployed email
 delivery; Mailpit remains unauthenticated and development-only.
+
+## Deployment Branches
+
+The deployment workflow maps branches to settings and default checkout paths:
+
+| Branch | `ENV` | Default path | OTP default |
+| --- | --- | --- | --- |
+| `dev` | `development` | `/home/dev/wasla_backend` | Mailpit email |
+| `stage` | `staging` | `/home/stage/wasla_backend` | HTTPS webhook |
+| `master` | `production` | `/home/prod/wasla_backend` | HTTPS webhook |
+
+Development does not require webhook credentials. Staging and production must
+provide the configuration required by their selected backend. Each deployment
+writes a mode-`600` `.env`, builds the verified commit, and waits for Compose
+service health.

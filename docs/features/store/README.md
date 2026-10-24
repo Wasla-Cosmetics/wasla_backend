@@ -154,22 +154,21 @@ Store routes are mounted under:
 
 Available viewsets:
 
-```http
-GET /api/store/ads/
-GET|POST /api/store/brands/
-GET|PUT|PATCH|DELETE /api/store/brands/{id}/
-GET|POST /api/store/branches/
-GET|PUT|PATCH|DELETE /api/store/branches/{id}/
-GET /api/store/categories/
-GET /api/store/products/
-GET /api/store/reviews/
-POST /api/store/reviews/
-```
+| Resource | Collection route | Detail route | Write access |
+| --- | --- | --- | --- |
+| Ads | `/api/store/ads/` | `/api/store/ads/{id}/` | Admin |
+| Brands | `/api/store/brands/` | `/api/store/brands/{id}/` | Admin |
+| Branches | `/api/store/branches/` | `/api/store/branches/{id}/` | Admin |
+| Categories | `/api/store/categories/` | `/api/store/categories/{id}/` | Admin |
+| Products | `/api/store/products/` | `/api/store/products/{id}/` | Admin |
+| Reviews | `/api/store/reviews/` | `/api/store/reviews/{id}/` | Authenticated owner or admin |
 
-The category and product viewsets also provide the standard detail and admin
-write operations. Store writes require admin permissions; reads are public.
+Collections support `GET` and `POST`; detail routes support `GET`, `PUT`,
+`PATCH`, and `DELETE`. Reads are public. Catalog writes require an admin.
 Branch writes use `brand_id`, category writes use `branch_id`, and product
-writes use `category_id`. Reads nest the ownership chain, for example:
+writes use `category_id`. Uploaded images require `multipart/form-data`.
+
+Reads nest the ownership chain, for example:
 
 ```json
 {
@@ -194,6 +193,10 @@ Review reads are public, but creating a review requires a user.
 Updating or deleting a review is limited to the review owner or admin users.
 Concurrent attempts to create the same review return HTTP `409` rather than a
 server error.
+
+Create a review with `product_id`, `rating`, and `description`. Review lists can
+be filtered by exact `product` or `user` ID. A review's product cannot be
+changed after creation, and public output omits the reviewer identity.
 
 ## Global Catalog Search
 
@@ -243,6 +246,13 @@ Accept-Language: en
 Use `Accept-Language: all` to include every translation field in each result.
 The endpoint is IP-throttled using `CATALOG_SEARCH_THROTTLE_RATE`, which
 defaults to `30/minute`.
+
+## Localized Responses
+
+Send `Accept-Language: en` or `Accept-Language: ar` for one localized value.
+On catalog collection routes and global search, `Accept-Language: all` keeps
+the normal field and adds suffixed values such as `title_en` and `title_ar`.
+Detail and write responses retain the single-language shape.
 
 ## Filtering
 
