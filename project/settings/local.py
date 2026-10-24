@@ -232,6 +232,7 @@ REST_FRAMEWORK = {
         "auth_ip": env.get("AUTH_IP_THROTTLE_RATE", "20/minute"),
         "auth_phone": env.get("AUTH_PHONE_THROTTLE_RATE", "5/minute"),
         "guest_user": env.get("GUEST_USER_THROTTLE_RATE", "10/hour"),
+        "catalog_search": env.get("CATALOG_SEARCH_THROTTLE_RATE", "30/minute"),
     },
 }
 

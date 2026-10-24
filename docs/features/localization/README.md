@@ -25,9 +25,9 @@ GET /api/store/products/
 Accept-Language: ar
 ```
 
-Store list endpoints also accept the special value `all`. The response keeps
-the existing localized fields and adds every configured translation using the
-language suffix:
+Store list endpoints and the global catalog search also accept the special
+value `all`. The response keeps the existing localized fields and adds every
+configured translation using the language suffix:
 
 ```http
 GET /api/store/products/
@@ -45,8 +45,8 @@ Accept-Language: all
 }
 ```
 
-This special value applies only to list responses. Detail and write responses
-keep their existing shape.
+This special value applies only to catalog collection responses. Detail and
+write responses keep their existing shape.
 
 Translated filters and admin searches always inspect every configured
 language. `Accept-Language` controls the response language; it does not limit
@@ -60,6 +60,13 @@ Accept-Language: ar
 
 ```http
 GET /api/store/products/?title=غسول
+Accept-Language: en
+```
+
+The same rule applies to global search:
+
+```http
+GET /api/search/?q=غسول
 Accept-Language: en
 ```
 

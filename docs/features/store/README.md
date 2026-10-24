@@ -133,6 +133,52 @@ Updating or deleting a review is limited to the review owner or admin users.
 Concurrent attempts to create the same review return HTTP `409` rather than a
 server error.
 
+## Global Catalog Search
+
+The public search endpoint searches the customer-facing catalog:
+
+```http
+GET /api/search/?q=rose
+```
+
+It searches every configured translation, independently of the response
+language:
+
+- Product `title` and `description`
+- Category `title`
+- Ad `title` and `subtitle`
+
+User accounts, guest sessions, reviews, OTPs, tokens, and other internal
+records are intentionally excluded. Each result has a `type` value of
+`product`, `category`, or `ad`, followed by that model's normal API fields.
+
+The `q` parameter is required after whitespace is trimmed and must contain
+between 2 and 100 characters. Restrict a request to one or more public result
+types with a comma-separated allowlist:
+
+```http
+GET /api/search/?q=rose&types=product,ad
+```
+
+Unknown result types return HTTP `400`. Results are ranked by exact title,
+title prefix, partial title, then description or subtitle match. Ties are
+stable, with products before categories before ads.
+
+Search uses the standard response envelope and page-number pagination. Its
+`page_size` is capped at `50`, even when a larger value is requested.
+
+`Accept-Language` controls only the serialized output. For example, an Arabic
+query can return an English response:
+
+```http
+GET /api/search/?q=ورد
+Accept-Language: en
+```
+
+Use `Accept-Language: all` to include every translation field in each result.
+The endpoint is IP-throttled using `CATALOG_SEARCH_THROTTLE_RATE`, which
+defaults to `30/minute`.
+
 ## Filtering
 
 Products support filters:

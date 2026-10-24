@@ -3,6 +3,28 @@ from rest_framework import serializers
 
 from apps.core.serializers import AllLanguagesModelSerializer
 from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
+from apps.store.search import CATALOG_SEARCH_TYPES
+
+
+class CatalogSearchQuerySerializer(serializers.Serializer):
+    q = serializers.CharField(min_length=2, max_length=100, trim_whitespace=True)
+    types = serializers.CharField(required=False, allow_blank=False)
+
+    def validate_types(self, value):
+        result_types = tuple(
+            dict.fromkeys(item.strip().lower() for item in value.split(","))
+        )
+        if not result_types or any(
+            result_type not in CATALOG_SEARCH_TYPES for result_type in result_types
+        ):
+            raise serializers.ValidationError(
+                _("Choose only from product, category, and ad.")
+            )
+        return result_types
+
+    def validate(self, attrs):
+        attrs.setdefault("types", CATALOG_SEARCH_TYPES)
+        return attrs
 
 
 class AdSerializer(AllLanguagesModelSerializer):
@@ -126,3 +148,20 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             )
 
         return attrs
+
+
+class CatalogSearchResultSerializer(serializers.Serializer):
+    serializer_classes = {
+        "product": ProductSerializer,
+        "category": CategorySerializer,
+        "ad": AdSerializer,
+    }
+
+    def to_representation(self, instance):
+        result_type = instance["type"]
+        serializer_class = self.serializer_classes[result_type]
+        serialized = serializer_class(
+            instance["object"],
+            context=self.context,
+        ).data
+        return {"type": result_type, **serialized}

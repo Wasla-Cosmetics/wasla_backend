@@ -19,6 +19,9 @@ class AllLanguagesModelSerializer(serializers.ModelSerializer):
         return field_names
 
     def _should_include_all_languages(self):
+        if self.context.get("include_all_languages"):
+            return True
+
         request = self.context.get("request")
         view = self.context.get("view")
         if request is None or getattr(view, "action", None) != "list":

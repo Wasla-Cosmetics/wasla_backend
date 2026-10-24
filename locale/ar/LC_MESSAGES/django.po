@@ -328,6 +328,9 @@ msgstr "مدخلات ذاكرة التخزين المؤقت لتقييد طلب�
 msgid "Compare-at price must be greater than the default price."
 msgstr "يجب أن يكون السعر قبل الخصم أكبر من السعر الافتراضي."
 
+msgid "Choose only from product, category, and ad."
+msgstr "اختر فقط من المنتج أو الفئة أو الإعلان."
+
 msgid "Error"
 msgstr "خطأ"
 

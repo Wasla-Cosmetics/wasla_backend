@@ -73,7 +73,8 @@ GET /api/store/products/?page_size=20
 ```
 
 The maximum accepted `page_size` is `100`. Public list endpoints are always
-paginated; clients cannot disable pagination with a query parameter.
+paginated; clients cannot disable pagination with a query parameter. The
+global catalog search uses a stricter maximum page size of `50`.
 
 ## Decimal Values
 
