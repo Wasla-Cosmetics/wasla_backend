@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 
+from apps.store.views import CatalogSearchView
+
 admin.site.site_header = _("Wasla Admin")
 admin.site.site_title = _("Wasla Admin Portal")
 admin.site.index_title = _("Welcome to Wasla Admin Portal")
@@ -19,6 +21,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     path("api/auth/", include("apps.authentication.urls")),
+    path("api/search/", CatalogSearchView.as_view(), name="catalog-search"),
     path("api/store/", include("apps.store.urls")),
 ]
 
