@@ -24,7 +24,7 @@ docker compose up --build
 
 Useful URLs:
 
-- Healthcheck: `http://localhost:8000/health/`
+- Readiness check: `http://localhost:8000/health/`
 - Admin: `http://localhost:8000/admin/`
 - Mailpit: `http://localhost:8025/`
 
@@ -57,7 +57,7 @@ The application exposes:
 - `/api/store/` for catalog and review resources.
 - `/api/search/` for global public catalog search.
 - `/admin/` for Django administration.
-- `/health/` for container and deployment health checks.
+- `/health/` for application and database readiness checks.
 
 All API responses use the shared response envelope documented in
 [API Behavior](docs/features/api-behavior/README.md).
@@ -158,7 +158,8 @@ configured HTTPS OTP webhook or real SMTP service; see
 
 ## Notes
 
-- `.env` is ignored by Git. Commit `.env.example`, not `.env`.
+- `.env` variants and private key files are ignored by Git. Commit
+  `.env.example`, not environment-specific secret files.
 - `.po` translation files are committed; generated `.mo` files are ignored.
 - `.venv/`, `__pycache__/`, `staticfiles/`, `media/`, and SQLite database files are ignored.
 - The default Docker workflow is Postgres.

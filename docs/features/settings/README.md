@@ -45,10 +45,6 @@ EMAIL_USE_TLS=False
 EMAIL_USE_SSL=False
 EMAIL_TIMEOUT_SECONDS=10
 DEFAULT_FROM_EMAIL=no-reply@wasla.local
-SECURE_SSL_REDIRECT=False
-SECURE_HSTS_SECONDS=0
-SECURE_HSTS_INCLUDE_SUBDOMAINS=False
-SECURE_HSTS_PRELOAD=False
 
 DATABASE_TYPE=postgres
 
@@ -78,6 +74,11 @@ Boolean environment values accept `1`, `true`, `yes`, or `on`
 case-insensitively; other supplied values are false. Comma-separated host and
 origin settings are trimmed and empty entries are ignored.
 
+The local template intentionally omits deployed security overrides such as
+`SECURE_SSL_REDIRECT` and `SECURE_HSTS_SECONDS`. This lets staging and
+production retain their secure defaults if the template is used as a starting
+point.
+
 ## Ngrok And CSRF
 
 When using Django admin or browser form POST requests through ngrok, include the
@@ -98,6 +99,9 @@ CSRF_TRUSTED_ORIGINS=https://vocal-duckling-steadily.ngrok-free.app
 - `stage` or `staging`
 - `prod` or `production`
 
+Any other value is rejected at startup instead of silently falling back to
+local settings.
+
 ## Deployed Settings
 
 Staging and production settings:
@@ -116,6 +120,10 @@ Staging and production settings:
 The included webhook delivery backend sends `{ "phone": ..., "otp": ... }` to
 an HTTPS provider endpoint using the configured bearer token. Staging defaults
 HSTS to one day; production defaults it to one year.
+
+Deployed environments accept only the provided email and webhook OTP backends.
+The email backend requires Django's SMTP backend, SMTP credentials, and exactly
+one of TLS or SSL. The webhook backend requires an HTTPS URL and bearer token.
 
 To deliver OTPs through a real SMTP service instead, select
 `apps.authentication.otp.EmailOtpDeliveryBackend` and configure the `EMAIL_*`
@@ -161,17 +169,18 @@ To select real SMTP email delivery later, set the environment-specific
 
 Prefix every name with `STAGE_` or `MASTER_`, matching the target GitHub
 environment. SMTP username and password are required for deployed email
-delivery; Mailpit remains unauthenticated and development-only.
+delivery. Exactly one of `EMAIL_USE_TLS` and `EMAIL_USE_SSL` must be true;
+Mailpit remains unauthenticated and development-only.
 
 ## Deployment Branches
 
 The deployment workflow maps branches to settings and default checkout paths:
 
-| Branch | `ENV` | Default path | OTP default |
-| --- | --- | --- | --- |
-| `dev` | `development` | `/home/dev/wasla_backend` | Mailpit email |
-| `stage` | `staging` | `/home/stage/wasla_backend` | HTTPS webhook |
-| `master` | `production` | `/home/prod/wasla_backend` | HTTPS webhook |
+| Branch | `ENV` | Default path | API port | PostgreSQL port | OTP default |
+| --- | --- | --- | --- | --- | --- |
+| `dev` | `development` | `/home/dev/wasla_backend` | `8000` | `5432` | Mailpit email |
+| `stage` | `staging` | `/home/stage/wasla_backend` | `8001` | `5433` | HTTPS webhook |
+| `master` | `production` | `/home/prod/wasla_backend` | `8002` | `5434` | HTTPS webhook |
 
 Development does not require webhook credentials. Staging and production must
 provide the configuration required by their selected backend. Each deployment

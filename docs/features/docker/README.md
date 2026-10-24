@@ -53,6 +53,10 @@ Before Django starts, the one-shot `volume-init` service:
 - Repairs ownership and write permissions on the persistent media and static volumes.
 - Copies `default.jpeg` into the media volume when it is missing.
 
+Because the initializer runs as root, it permits only the image's fixed media,
+static, default-image, and `django:django` ownership values before any recursive
+ownership or permission change.
+
 The service exits after initialization. Django continues to run as the unprivileged
 `django` user. Translation catalogs are compiled while the image is built. At
 container startup Django runs:
@@ -75,7 +79,7 @@ unhealthy proxy.
 
 ## Useful URLs
 
-- Healthcheck: `http://localhost:8000/health/`
+- Readiness check: `http://localhost:8000/health/`
 - Admin: `http://localhost:8000/admin/`
 - Mailpit inbox: `http://localhost:8025/`
 
@@ -131,6 +135,9 @@ docker compose exec django bash
 ## Service Health
 
 `docker compose up --wait` waits for PostgreSQL, Django, and Nginx health.
+The `/health/` endpoint performs a database query and returns HTTP `503` when
+the database is unavailable, so Django and Nginx do not report healthy while
+the API cannot serve database-backed requests.
 Inspect failures with:
 
 ```bash

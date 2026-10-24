@@ -125,6 +125,8 @@ Set another password for all seeded accounts with:
 python manage.py seed_data --password "AnotherStrongPassword123!"
 ```
 
+Custom passwords are never printed to command output.
+
 Operational cache rows and third-party token/session tables are intentionally
 not seeded.
 

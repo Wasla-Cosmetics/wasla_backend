@@ -12,6 +12,16 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+if [ "$media_root" != "/django/media" ] || [ "$static_root" != "/django/staticfiles" ]; then
+    echo "Volume paths must be /django/media and /django/staticfiles." >&2
+    exit 1
+fi
+
+if [ "$default_image_source" != "/django/default.jpeg" ] || [ "$app_owner" != "django:django" ]; then
+    echo "Volume source and owner must use the image defaults." >&2
+    exit 1
+fi
+
 if [ ! -f "$default_image_source" ]; then
     echo "Default image not found: $default_image_source" >&2
     exit 1

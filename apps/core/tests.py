@@ -1,12 +1,17 @@
 import ast
+from datetime import timedelta
 from io import StringIO
 import os
 from pathlib import Path
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from django.core.management import CommandError, call_command
+from django.db import OperationalError
 from django.test import SimpleTestCase, TestCase, override_settings
+from django.utils import timezone
 
 from apps.authentication.models import GuestUser, User
 from apps.core.signals import ensure_default_media
@@ -63,6 +68,27 @@ class SeedDataCommandTests(TestCase):
             call_command("seed_data", stdout=StringIO())
 
         self.assertEqual(self._domain_model_counts(), first_counts)
+
+    def test_refreshes_expired_seed_guest_session(self):
+        guest = GuestUser.objects.create(
+            session_key="seed-guest-session",
+            expires_at=timezone.now() - timedelta(days=1),
+        )
+
+        with patch.dict(os.environ, {"ENV": "local"}):
+            call_command("seed_data", stdout=StringIO())
+
+        guest.refresh_from_db()
+        self.assertGreater(guest.expires_at, timezone.now())
+
+    def test_does_not_write_custom_password_to_command_output(self):
+        output = StringIO()
+        custom_password = "PrivateSeedPassword123!"
+
+        with patch.dict(os.environ, {"ENV": "local"}):
+            call_command("seed_data", password=custom_password, stdout=output)
+
+        self.assertNotIn(custom_password, output.getvalue())
 
     def test_keeps_same_named_categories_in_other_branches(self):
         other_brand = Brand.objects.create(title_en="Other Brand")
@@ -139,6 +165,150 @@ class DefaultMediaTests(SimpleTestCase):
             ensure_default_media()
 
             self.assertEqual(installed_image.read_bytes(), b"custom image")
+
+
+class HealthCheckTests(TestCase):
+    def test_returns_service_unavailable_when_database_is_unreachable(self):
+        with patch(
+            "django.db.backends.utils.CursorWrapper.execute",
+            side_effect=OperationalError("database unavailable"),
+        ):
+            response = self.client.get("/health/")
+
+        self.assertEqual(response.status_code, 503)
+
+
+class DeploymentConfigurationTests(SimpleTestCase):
+    def test_default_host_ports_do_not_overlap_between_environments(self):
+        project_root = Path(__file__).resolve().parents[2]
+        workflow = (project_root / ".github/workflows/deploy.yaml").read_text()
+
+        expected_defaults = (
+            'django_port="${DEV_DJANGO_PORT:-8000}"',
+            'django_port="${STAGE_DJANGO_PORT:-8001}"',
+            'django_port="${MASTER_DJANGO_PORT:-8002}"',
+            'postgres_host_port="${DEV_POSTGRES_HOST_PORT:-5432}"',
+            'postgres_host_port="${STAGE_POSTGRES_HOST_PORT:-5433}"',
+            'postgres_host_port="${MASTER_POSTGRES_HOST_PORT:-5434}"',
+        )
+
+        for expected_default in expected_defaults:
+            with self.subTest(expected_default=expected_default):
+                self.assertIn(expected_default, workflow)
+
+    def test_local_environment_template_does_not_override_deployed_security_defaults(
+        self,
+    ):
+        project_root = Path(__file__).resolve().parents[2]
+        environment_template = (project_root / ".env.example").read_text()
+
+        for setting_name in (
+            "SECURE_SSL_REDIRECT",
+            "SECURE_HSTS_SECONDS",
+            "SECURE_HSTS_INCLUDE_SUBDOMAINS",
+            "SECURE_HSTS_PRELOAD",
+        ):
+            with self.subTest(setting_name=setting_name):
+                self.assertNotIn(f"{setting_name}=", environment_template)
+
+
+class SettingsSelectionTests(SimpleTestCase):
+    @staticmethod
+    def import_settings(**overrides):
+        project_root = Path(__file__).resolve().parents[2]
+        environment = {
+            **os.environ,
+            "DATABASE_TYPE": "sqlite3",
+            "SQLITE_NAME": ":memory:",
+            **overrides,
+        }
+        return subprocess.run(
+            [sys.executable, "-c", "import project.settings"],
+            cwd=project_root,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def test_unknown_environment_fails_closed(self):
+        result = self.import_settings(ENV="prodution")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ENV must be one of", result.stderr)
+
+    def test_deployed_email_otp_requires_real_smtp_backend(self):
+        result = self.import_settings(
+            ENV="production",
+            SECRET_KEY="production-secret-key-with-more-than-fifty-characters-12345",
+            ALLOWED_HOSTS="api.example.com",
+            TRUSTED_PROXY_COUNT="1",
+            AUTH_OTP_DELIVERY_BACKEND=(
+                "apps.authentication.otp.EmailOtpDeliveryBackend"
+            ),
+            EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend",
+            EMAIL_HOST="smtp.example.com",
+            EMAIL_HOST_USER="smtp-user",
+            EMAIL_HOST_PASSWORD="smtp-password",
+            EMAIL_USE_TLS="True",
+            EMAIL_USE_SSL="False",
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("SMTP email backend", result.stderr)
+
+    def test_deployed_email_otp_accepts_complete_smtp_configuration(self):
+        result = self.import_settings(
+            ENV="production",
+            SECRET_KEY="production-secret-key-with-more-than-fifty-characters-12345",
+            ALLOWED_HOSTS="api.example.com",
+            TRUSTED_PROXY_COUNT="1",
+            AUTH_OTP_DELIVERY_BACKEND=(
+                "apps.authentication.otp.EmailOtpDeliveryBackend"
+            ),
+            EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+            EMAIL_HOST="smtp.example.com",
+            EMAIL_HOST_USER="smtp-user",
+            EMAIL_HOST_PASSWORD="smtp-password",
+            EMAIL_USE_TLS="True",
+            EMAIL_USE_SSL="False",
+            DEFAULT_FROM_EMAIL="otp@example.com",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_deployed_email_otp_requires_configured_sender_address(self):
+        result = self.import_settings(
+            ENV="production",
+            SECRET_KEY="production-secret-key-with-more-than-fifty-characters-12345",
+            ALLOWED_HOSTS="api.example.com",
+            TRUSTED_PROXY_COUNT="1",
+            AUTH_OTP_DELIVERY_BACKEND=(
+                "apps.authentication.otp.EmailOtpDeliveryBackend"
+            ),
+            EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+            EMAIL_HOST="smtp.example.com",
+            EMAIL_HOST_USER="smtp-user",
+            EMAIL_HOST_PASSWORD="smtp-password",
+            EMAIL_USE_TLS="True",
+            EMAIL_USE_SSL="False",
+            DEFAULT_FROM_EMAIL="no-reply@wasla.local",
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("DEFAULT_FROM_EMAIL", result.stderr)
+
+    def test_deployed_settings_reject_unsupported_otp_backend(self):
+        result = self.import_settings(
+            ENV="production",
+            SECRET_KEY="production-secret-key-with-more-than-fifty-characters-12345",
+            ALLOWED_HOSTS="api.example.com",
+            TRUSTED_PROXY_COUNT="1",
+            AUTH_OTP_DELIVERY_BACKEND="custom.otp.Backend",
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("supported OTP delivery backend", result.stderr)
 
 
 class ArabicCatalogTests(SimpleTestCase):
