@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.authentication.models import GuestUser
 from apps.store.admin import (
     AdAdmin,
     BrandAdmin,
@@ -68,6 +69,19 @@ class StoreApiTests(APITestCase):
             set(response.data["data"][0].keys()),
             {"id", "title", "subtitle", "image"},
         )
+
+    def test_guest_token_cannot_write_admin_catalog_resources(self):
+        guest = GuestUser.objects.create(session_key="guest-catalog-token")
+
+        response = self.client.post(
+            reverse("ads-list"),
+            {"title": "Blocked Ad"},
+            HTTP_X_GUEST_TOKEN=guest.session_key,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(Ad.objects.filter(title="Blocked Ad").exists())
 
     def test_category_endpoint_exposes_parent(self):
         parent = Category.objects.create(
@@ -165,6 +179,20 @@ class StoreApiTests(APITestCase):
                     description="Gentle daily cleanser",
                     default_price="150.00",
                     compare_at_price="100.00",
+                )
+
+    def test_product_database_rejects_negative_default_price(self):
+        category = Category.objects.create(
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                Product.objects.create(
+                    category=category,
+                    title="Cleanser",
+                    description="Gentle daily cleanser",
+                    default_price="-1.00",
                 )
 
     def test_products_endpoint_cannot_disable_pagination(self):
@@ -584,6 +612,41 @@ class ProductReviewApiTests(APITestCase):
         self.assertEqual(response.data["data"][0]["rating"], 4)
         self.assertEqual(response.data["pagination"]["count"], 1)
 
+    def test_public_reviews_cannot_be_filtered_by_reviewer_identity(self):
+        other_user = self.user_model.objects.create_user(
+            phone="+201000000103",
+            email="private-reviewer@example.com",
+            full_name="Private Review User",
+            password="NileBridgePass123!",
+            is_active=True,
+        )
+        other_product = Product.objects.create(
+            category=self.category,
+            title="Moisturizer",
+            description="Daily moisturizer",
+            default_price="200.00",
+        )
+        ProductReview.objects.create(
+            product=self.product,
+            user=self.user,
+            rating=4,
+            description="Good product.",
+        )
+        ProductReview.objects.create(
+            product=other_product,
+            user=other_user,
+            rating=5,
+            description="Excellent product.",
+        )
+
+        response = self.client.get(
+            reverse("reviews-list"),
+            {"user": self.user.id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["pagination"]["count"], 2)
+
     def test_guest_user_cannot_create_product_review(self):
         response = self.client.post(
             reverse("reviews-list"),
@@ -611,6 +674,16 @@ class ProductReviewApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("rating", response.data["errors"])
+
+    def test_database_rejects_review_rating_outside_supported_range(self):
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                ProductReview.objects.create(
+                    product=self.product,
+                    user=self.user,
+                    rating=6,
+                    description="Invalid rating.",
+                )
 
     def test_user_cannot_review_same_product_twice(self):
         ProductReview.objects.create(
@@ -692,3 +765,24 @@ class ProductReviewApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["data"]["description"], "Updated review.")
+
+    def test_review_owner_can_replace_review_without_resubmitting_product(self):
+        review = ProductReview.objects.create(
+            product=self.product,
+            user=self.user,
+            rating=4,
+            description="Good product.",
+        )
+
+        response = self.client.put(
+            reverse("reviews-detail", args=[review.id]),
+            {"rating": 5, "description": "Excellent product."},
+            **self.auth_headers(),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        review.refresh_from_db()
+        self.assertEqual(review.product, self.product)
+        self.assertEqual(review.rating, 5)
+        self.assertEqual(review.description, "Excellent product.")

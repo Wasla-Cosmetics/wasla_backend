@@ -64,6 +64,10 @@ Tree-based product category using `django-mptt`:
 Categories are ordered inside the tree by `title`. A category and its parent
 and child nodes must all belong to the same branch.
 
+A category cannot be moved below itself or one of its descendants. Deleting a
+category that still has child categories or products is rejected with HTTP
+`409`, preventing accidental catalog cascades.
+
 ### Product
 
 Catalog product model:
@@ -85,7 +89,9 @@ Catalog product model:
 Products are ordered by `title`.
 
 When `compare_at_price` is provided, it must be greater than `default_price`.
-The API calculates `discount_percentage`; clients do not submit or store it:
+The default price cannot be negative. These price rules are enforced by both
+API validation and database constraints. The API calculates
+`discount_percentage`; clients do not submit or store it:
 
 ```json
 {
@@ -143,6 +149,8 @@ Customer review for a product:
 
 Each user can review a product once.
 Public review responses intentionally omit reviewer IDs and names.
+The database also enforces the supported rating range and one-review-per-user
+rule, so direct writes cannot bypass the API validation.
 
 ## API Routes
 
@@ -195,8 +203,9 @@ Concurrent attempts to create the same review return HTTP `409` rather than a
 server error.
 
 Create a review with `product_id`, `rating`, and `description`. Review lists can
-be filtered by exact `product` or `user` ID. A review's product cannot be
-changed after creation, and public output omits the reviewer identity.
+be filtered by exact `product` ID. Filtering by reviewer identity is
+intentionally unsupported because public output omits the reviewer identity.
+A review's product cannot be changed after creation.
 
 ## Global Catalog Search
 

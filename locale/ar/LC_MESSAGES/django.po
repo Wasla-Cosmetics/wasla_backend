@@ -285,6 +285,9 @@ msgstr "يجب أن ينتمي التصنيف والتصنيف الأب إلى �
 msgid "Category and children must belong to the same branch."
 msgstr "يجب أن ينتمي التصنيف والتصنيفات الفرعية إلى الفرع نفسه."
 
+msgid "Category parent cannot be itself or a descendant."
+msgstr "لا يمكن أن يكون التصنيف الأب هو التصنيف نفسه أو أحد تصنيفاته الفرعية."
+
 msgid "This catalog resource is in use and cannot be deleted."
 msgstr "عنصر الكتالوج هذا قيد الاستخدام ولا يمكن حذفه."
 

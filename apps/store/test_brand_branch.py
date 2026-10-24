@@ -60,6 +60,21 @@ class BrandBranchModelTests(TestCase):
         with self.assertRaises(ValidationError):
             invalid_child.full_clean()
 
+    def test_category_parent_cannot_create_a_tree_cycle(self):
+        brand = Brand.objects.create(title="Wasla")
+        branch = Branch.objects.create(brand=brand, title="Cairo")
+        parent = Category.objects.create(branch=branch, title="Skin Care")
+        child = Category.objects.create(
+            branch=branch,
+            parent=parent,
+            title="Face Care",
+        )
+
+        parent.parent = child
+
+        with self.assertRaises(ValidationError):
+            parent.full_clean()
+
     def test_populated_brand_and_branch_are_protected_from_deletion(self):
         brand = Brand.objects.create(title="Wasla")
         branch = Branch.objects.create(brand=brand, title="Cairo")
@@ -70,6 +85,25 @@ class BrandBranchModelTests(TestCase):
 
         with self.assertRaises(ProtectedError):
             brand.delete()
+
+    def test_categories_with_children_or_products_are_protected_from_deletion(self):
+        brand = Brand.objects.create(title="Wasla")
+        branch = Branch.objects.create(brand=brand, title="Cairo")
+        parent = Category.objects.create(branch=branch, title="Skin Care")
+        Category.objects.create(branch=branch, parent=parent, title="Face Care")
+        product_category = Category.objects.create(branch=branch, title="Makeup")
+        Product.objects.create(
+            category=product_category,
+            title="Lipstick",
+            description="Matte lipstick",
+            default_price="100.00",
+        )
+
+        with self.assertRaises(ProtectedError):
+            parent.delete()
+
+        with self.assertRaises(ProtectedError):
+            product_category.delete()
 
 
 class BrandBranchMigrationTests(TransactionTestCase):
@@ -251,6 +285,43 @@ class BrandBranchApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("parent", response.data["errors"])
+
+    def test_api_rejects_category_parent_cycles(self):
+        parent = Category.objects.create(branch=self.branch, title="Skin Care")
+        child = Category.objects.create(
+            branch=self.branch,
+            parent=parent,
+            title="Face Care",
+        )
+
+        for invalid_parent in (parent, child):
+            with self.subTest(invalid_parent=invalid_parent.id):
+                response = self.client.patch(
+                    reverse("categories-detail", args=[parent.id]),
+                    {"parent": invalid_parent.id},
+                    **self.auth_headers(),
+                    format="json",
+                )
+
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn("parent", response.data["errors"])
+
+    def test_populated_category_delete_returns_conflict(self):
+        category = Category.objects.create(branch=self.branch, title="Skin Care")
+        Product.objects.create(
+            category=category,
+            title="Cleanser",
+            description="Gentle cleanser",
+            default_price="100.00",
+        )
+
+        response = self.client.delete(
+            reverse("categories-detail", args=[category.id]),
+            **self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertTrue(Category.objects.filter(pk=category.pk).exists())
 
     def test_populated_brand_and_branch_delete_return_conflict(self):
         Category.objects.create(branch=self.branch, title="Skin Care")
