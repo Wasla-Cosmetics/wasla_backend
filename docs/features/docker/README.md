@@ -1,6 +1,7 @@
 # Docker Workflow
 
-The Docker Compose workflow runs Django with PostgreSQL.
+The Docker Compose workflow runs Django with PostgreSQL and uses Mailpit to
+capture development OTP emails.
 
 ## Start The Stack
 
@@ -66,6 +67,11 @@ Docker Compose forces Django to use Postgres because the stack includes a Postgr
 
 - Healthcheck: `http://localhost:8000/health/`
 - Admin: `http://localhost:8000/admin/`
+- Mailpit inbox: `http://localhost:8025/`
+
+Mailpit is enabled through `COMPOSE_PROFILES=mailpit` in `.env.example`. Its
+SMTP and web ports bind only to `127.0.0.1`; messages do not leave the machine.
+The captured mailbox is persisted in the `mailpit_data` Docker volume.
 
 ## Common Commands
 

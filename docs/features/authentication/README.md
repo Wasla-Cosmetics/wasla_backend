@@ -11,10 +11,15 @@ password hash of the OTP is stored, and the OTP is cleared after successful
 verification or failed delivery. Authentication endpoints are throttled by
 both client IP and normalized phone number.
 
-Local settings use an unconfigured delivery backend intentionally, so OTP
-requests return `503` until a delivery backend is selected. Staging and
-production refuse to start with that backend. The included webhook backend
-posts this payload to the configured HTTPS endpoint:
+Settings remain fail-closed with an unconfigured delivery backend until one is
+selected. The provided Docker development configuration selects
+`EmailOtpDeliveryBackend` and delivers messages to Mailpit. Open its local inbox
+at `http://localhost:8025/` to read an OTP without an external provider.
+
+Staging and production refuse to start with the unconfigured backend. They can
+use the email backend with a real SMTP service or the webhook backend for an SMS
+provider. The webhook backend posts this payload to the configured HTTPS
+endpoint:
 
 ```json
 {
@@ -24,6 +29,10 @@ posts this payload to the configured HTTPS endpoint:
 ```
 
 It authenticates with `Authorization: Bearer <AUTH_OTP_WEBHOOK_TOKEN>`.
+
+The email backend sends a plain-text verification message to the unique email
+address stored on the user account. SMTP connection failures are returned as an
+OTP delivery-unavailable response and the stored OTP is cleared.
 
 ## Password Reset
 

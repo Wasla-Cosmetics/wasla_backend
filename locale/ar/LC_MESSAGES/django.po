@@ -367,6 +367,12 @@ msgstr "خطأ في التحقق من البيانات"
 msgid "You already reviewed this product."
 msgstr "لقد قيّمت هذا المنتج من قبل."
 
+msgid "Your Wasla verification code"
+msgstr "رمز التحقق الخاص بك من وصلة"
+
+msgid "Your verification code is %(otp)s. It expires in %(minutes)s minutes."
+msgstr "رمز التحقق الخاص بك هو %(otp)s. تنتهي صلاحيته خلال %(minutes)s دقائق."
+
 msgid "compare-at price"
 msgstr "السعر قبل الخصم"
 

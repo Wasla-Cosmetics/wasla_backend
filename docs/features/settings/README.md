@@ -16,19 +16,31 @@ Main variables:
 SERVER_NAME=local_wasla_backend_server
 DJANGO_IMAGE=wasla_backend:latest
 DJANGO_PORT=8000
+COMPOSE_PROFILES=mailpit
+MAILPIT_SMTP_PORT=1025
+MAILPIT_UI_PORT=8025
 ENV=local
 SECRET_KEY=change-me
 ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 CSRF_TRUSTED_ORIGINS=
 DEBUG=True
 AUTH_OTP_TTL_MINUTES=10
-AUTH_OTP_DELIVERY_BACKEND=apps.authentication.otp.UnconfiguredOtpDeliveryBackend
+AUTH_OTP_DELIVERY_BACKEND=apps.authentication.otp.EmailOtpDeliveryBackend
 AUTH_OTP_WEBHOOK_URL=
 AUTH_OTP_WEBHOOK_TOKEN=
 AUTH_OTP_WEBHOOK_TIMEOUT_SECONDS=10
 AUTH_IP_THROTTLE_RATE=20/minute
 AUTH_PHONE_THROTTLE_RATE=5/minute
 PASSWORD_RESET_TIMEOUT=600
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=mailpit
+EMAIL_PORT=1025
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+EMAIL_USE_TLS=False
+EMAIL_USE_SSL=False
+EMAIL_TIMEOUT_SECONDS=10
+DEFAULT_FROM_EMAIL=no-reply@wasla.local
 
 DATABASE_TYPE=postgres
 
@@ -89,6 +101,10 @@ Staging and production settings:
 The included webhook delivery backend sends `{ "phone": ..., "otp": ... }` to
 an HTTPS provider endpoint using the configured bearer token. Staging defaults
 HSTS to one day; production defaults it to one year.
+
+To deliver OTPs through a real SMTP service instead, select
+`apps.authentication.otp.EmailOtpDeliveryBackend` and configure the `EMAIL_*`
+settings. Do not use Mailpit outside development.
 
 Example:
 

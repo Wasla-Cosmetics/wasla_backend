@@ -191,6 +191,19 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+EMAIL_BACKEND = env.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = env.get("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(env.get("EMAIL_PORT", "25"))
+EMAIL_HOST_USER = env.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = env.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", False)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", False)
+EMAIL_TIMEOUT = int(env.get("EMAIL_TIMEOUT_SECONDS", "10"))
+DEFAULT_FROM_EMAIL = env.get("DEFAULT_FROM_EMAIL", "no-reply@wasla.local")
+
 AUTH_USER_MODEL = "authentication.User"
 AUTH_OTP_TTL_MINUTES = int(env.get("AUTH_OTP_TTL_MINUTES", "10"))
 AUTH_OTP_DELIVERY_BACKEND = env.get(
