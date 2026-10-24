@@ -162,8 +162,8 @@ jobs:
             stage)
               deploy_path="${STAGE_DEPLOY_PATH:-/home/stage/wasla_backend}"
               server_name="${STAGE_SERVER_NAME:-stage_wasla_backend_server}"
-              django_port="${STAGE_DJANGO_PORT:-8000}"
-              postgres_host_port="${STAGE_POSTGRES_HOST_PORT:-5432}"
+              django_port="${STAGE_DJANGO_PORT:-8001}"
+              postgres_host_port="${STAGE_POSTGRES_HOST_PORT:-5433}"
               allowed_hosts="$STAGE_ALLOWED_HOSTS"
               csrf_origins="$STAGE_CSRF_TRUSTED_ORIGINS"
               otp_delivery_backend="${STAGE_OTP_DELIVERY_BACKEND:-apps.authentication.otp.WebhookOtpDeliveryBackend}"
@@ -180,8 +180,8 @@ jobs:
             master)
               deploy_path="${MASTER_DEPLOY_PATH:-/home/prod/wasla_backend}"
               server_name="${MASTER_SERVER_NAME:-prod_wasla_backend_server}"
-              django_port="${MASTER_DJANGO_PORT:-8000}"
-              postgres_host_port="${MASTER_POSTGRES_HOST_PORT:-5432}"
+              django_port="${MASTER_DJANGO_PORT:-8002}"
+              postgres_host_port="${MASTER_POSTGRES_HOST_PORT:-5434}"
               allowed_hosts="$MASTER_ALLOWED_HOSTS"
               csrf_origins="$MASTER_CSRF_TRUSTED_ORIGINS"
               otp_delivery_backend="${MASTER_OTP_DELIVERY_BACKEND:-apps.authentication.otp.WebhookOtpDeliveryBackend}"

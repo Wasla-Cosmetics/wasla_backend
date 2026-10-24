@@ -102,8 +102,7 @@ TEMPLATES = [
     },
 ]
 
-# WSGI and ASGI
-WSGI_APPLICATION = "project.wsgi.application"
+# ASGI
 ASGI_APPLICATION = "project.asgi.application"
 
 # Database

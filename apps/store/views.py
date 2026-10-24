@@ -103,7 +103,7 @@ class BranchViewSet(ProtectedDestroyMixin, ModelViewSet):
     filterset_class = BranchFilter
 
 
-class CategoryViewSet(ModelViewSet):
+class CategoryViewSet(ProtectedDestroyMixin, ModelViewSet):
     queryset = Category.objects.select_related("branch__brand")
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -122,11 +122,11 @@ class ProductViewSet(ModelViewSet):
 
 
 class ProductReviewViewSet(ModelViewSet):
-    queryset = ProductReview.objects.select_related("product", "user")
+    queryset = ProductReview.objects.select_related("product")
     serializer_class = ProductReviewSerializer
     permission_classes = [IsReviewOwnerOrAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["product", "user"]
+    filterset_fields = ["product"]
 
     def perform_create(self, serializer):
         try:

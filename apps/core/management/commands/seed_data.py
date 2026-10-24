@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from apps.authentication.models import GuestUser
+from apps.authentication.models import GuestUser, guest_user_expiration
 from apps.store.models import (
     Ad,
     Brand,
@@ -56,7 +56,6 @@ class Command(BaseCommand):
         )
         self.stdout.write("Admin phone: +201000000001")
         self.stdout.write("Customer phones: +201000000002, +201000000003")
-        self.stdout.write(f"Demo password: {password}")
 
     def _seed_users(self, password):
         user_model = get_user_model()
@@ -103,7 +102,10 @@ class Command(BaseCommand):
         return users
 
     def _seed_guest_user(self):
-        GuestUser.objects.get_or_create(session_key="seed-guest-session")
+        GuestUser.objects.update_or_create(
+            session_key="seed-guest-session",
+            defaults={"expires_at": guest_user_expiration()},
+        )
 
     def _seed_ads(self):
         ads = (

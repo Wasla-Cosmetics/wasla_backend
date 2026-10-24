@@ -6,7 +6,8 @@ Localization is configured in `project/settings/local.py` and `project/urls.py`.
 
 Translation source files (`.po`) are committed.
 
-Compiled message files (`.mo`) are generated and ignored by Git and Docker build context.
+Compiled message files (`.mo`) are generated and ignored by Git and the Docker
+build context.
 
 ## Supported Languages
 
@@ -24,6 +25,10 @@ model fields:
 GET /api/store/products/
 Accept-Language: ar
 ```
+
+`ar` returns Arabic `title` and `description` values where those translated
+fields exist; `en` returns their English values. Django-modeltranslation falls
+back to English when an Arabic value is empty.
 
 Brand, branch, category, product, and ad list endpoints and the global catalog
 search also accept the special value `all`. The response keeps the existing
@@ -49,6 +54,10 @@ Accept-Language: all
 This special value applies only to catalog collection responses. Detail and
 write responses keep their existing shape.
 
+The supported collection responses are ads, brands, branches, categories,
+products, and global catalog search results. Authentication and review payloads
+do not gain language-suffixed model fields.
+
 Translated filters and admin searches always inspect every configured
 language. `Accept-Language` controls the response language; it does not limit
 which translated values can match. For example, both requests find the same
@@ -72,6 +81,9 @@ GET /api/search/?q=غسول
 Accept-Language: en
 ```
 
+Ad text is searched in every language by global search. Ads do not currently
+expose standalone title filters.
+
 ## Workflow
 
 After adding or changing translatable strings, update the Arabic catalog:
@@ -85,6 +97,8 @@ After editing translations, compile the runtime message files:
 ```bash
 python manage.py compilemessages --ignore ".venv/*" --verbosity 0
 ```
+
+Commit the updated `.po` source. Do not commit generated `.mo` files.
 
 ## Docker Behavior
 

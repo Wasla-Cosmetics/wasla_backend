@@ -1,5 +1,10 @@
 .git
 .env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
 .venv
 .idea
 __pycache__

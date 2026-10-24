@@ -3,9 +3,27 @@
 Shared API behavior is configured in `project/settings/local.py` through
 `REST_FRAMEWORK`.
 
+All paths below are relative to the same host. API clients should send JSON for
+ordinary request bodies and `multipart/form-data` when uploading images.
+
+## Authentication And Language Headers
+
+Authenticated endpoints expect a JWT access token:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+Guest sessions use `X-Guest-Token` instead. A guest session identifies a
+client but does not grant permissions reserved for authenticated users.
+
+Use `Accept-Language: en` or `Accept-Language: ar` to select translated output.
+Catalog lists and global search additionally support `Accept-Language: all`;
+see [Localization](../localization/README.md).
+
 ## Response Envelope
 
-DRF API responses use one shared top-level shape:
+DRF API responses that contain a body use one shared top-level shape:
 
 ```json
 {
@@ -30,6 +48,11 @@ Validation and API errors keep the same shape:
   "pagination": null
 }
 ```
+
+The `status` field mirrors the HTTP status code. `data` contains successful
+content, while `errors` contains validation or API error details. Successful
+resource deletion uses HTTP `204 No Content` and therefore has no response
+body.
 
 ## Pagination
 
@@ -72,9 +95,9 @@ Request a custom page size:
 GET /api/store/products/?page_size=20
 ```
 
-The maximum accepted `page_size` is `100`. Public list endpoints are always
-paginated; clients cannot disable pagination with a query parameter. The
-global catalog search uses a stricter maximum page size of `50`.
+The maximum accepted `page_size` is `100`. List endpoints are always paginated;
+clients cannot disable pagination with a query parameter. The global catalog
+search uses a stricter maximum page size of `50`.
 
 ## Decimal Values
 

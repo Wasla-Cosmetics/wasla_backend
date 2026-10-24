@@ -5,6 +5,7 @@ Settings config
 from os import R_OK, access, environ as env
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 dotenv_path = Path(__file__).resolve().parents[2] / ".env"
@@ -19,5 +20,10 @@ elif env_state in {"stage", "staging"}:
     from project.settings.staging import *
 elif env_state in {"dev", "development"}:
     from project.settings.development import *
-else:
+elif env_state == "local":
     from project.settings.local import *
+else:
+    raise ImproperlyConfigured(
+        "ENV must be one of: local, dev, development, stage, staging, prod, "
+        "production."
+    )

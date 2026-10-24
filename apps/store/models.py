@@ -84,7 +84,7 @@ class Category(MPTTModel, TimeStampedModel):
     )
     parent = TreeForeignKey(
         "self",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="subcategories",
@@ -100,6 +100,15 @@ class Category(MPTTModel, TimeStampedModel):
 
     def clean(self):
         super().clean()
+        if (
+            self.pk
+            and self.parent_id
+            and (self.parent_id == self.pk or self.parent.is_descendant_of(self))
+        ):
+            raise ValidationError(
+                {"parent": _("Category parent cannot be itself or a descendant.")}
+            )
+
         if (
             self.parent_id
             and self.branch_id
@@ -126,7 +135,7 @@ class Product(TimeStampedModel):
     category = models.ForeignKey(
         Category,
         related_name="products",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         verbose_name=_("category"),
     )
     title = models.CharField(_("title"), max_length=255)
@@ -166,6 +175,10 @@ class Product(TimeStampedModel):
         verbose_name_plural = _("products")
         ordering = ["title"]
         constraints = [
+            models.CheckConstraint(
+                condition=models.Q(default_price__gte=0),
+                name="product_default_price_non_negative",
+            ),
             models.CheckConstraint(
                 condition=(
                     models.Q(compare_at_price__isnull=True)
@@ -229,6 +242,10 @@ class ProductReview(TimeStampedModel):
         verbose_name_plural = _("product reviews")
         ordering = ["-created_at"]
         constraints = [
+            models.CheckConstraint(
+                condition=models.Q(rating__gte=1, rating__lte=5),
+                name="product_review_rating_between_1_and_5",
+            ),
             models.UniqueConstraint(
                 fields=["product", "user"],
                 name="unique_product_review_per_user",

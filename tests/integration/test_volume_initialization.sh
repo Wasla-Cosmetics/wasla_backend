@@ -14,6 +14,26 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 docker build --quiet --build-arg ENV=local --tag "$image" "$project_root" >/dev/null
+
+assert_rejected_override() {
+    variable=$1
+    value=$2
+
+    if docker run --rm --user 0:0 \
+        --env "$variable=$value" \
+        "$image" \
+        /django/docker/initialize-volumes.sh >/dev/null 2>&1
+    then
+        echo "Volume initialization accepted unsafe $variable=$value." >&2
+        exit 1
+    fi
+}
+
+assert_rejected_override MEDIA_ROOT /tmp
+assert_rejected_override STATIC_ROOT /tmp
+assert_rejected_override DEFAULT_IMAGE_SOURCE /tmp/default.jpeg
+assert_rejected_override APP_OWNER root:root
+
 docker volume create "$media_volume" >/dev/null
 docker volume create "$static_volume" >/dev/null
 

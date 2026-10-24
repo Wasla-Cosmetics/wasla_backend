@@ -97,6 +97,17 @@ class CategorySerializer(AllLanguagesModelSerializer):
             self.instance.parent if self.instance else None,
         )
 
+        if (
+            self.instance
+            and parent
+            and (
+                parent.pk == self.instance.pk or parent.is_descendant_of(self.instance)
+            )
+        ):
+            raise serializers.ValidationError(
+                {"parent": _("Category parent cannot be itself or a descendant.")}
+            )
+
         if parent and branch and parent.branch_id != branch.id:
             raise serializers.ValidationError(
                 {"parent": _("Category and parent must belong to the same branch.")}
@@ -180,6 +191,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         queryset=Product.objects.all(),
         source="product",
         write_only=True,
+        required=False,
     )
 
     class Meta:
@@ -201,14 +213,20 @@ class ProductReviewSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
-        if self.instance and "product" in attrs:
-            raise serializers.ValidationError(
-                {"product_id": _("Product cannot be changed.")}
-            )
-
         request = self.context.get("request")
         user = getattr(request, "user", None)
         product = attrs.get("product")
+
+        if self.instance:
+            if product and product.pk != self.instance.product_id:
+                raise serializers.ValidationError(
+                    {"product_id": _("Product cannot be changed.")}
+                )
+            attrs.pop("product", None)
+        elif product is None:
+            raise serializers.ValidationError(
+                {"product_id": _("This field is required.")}
+            )
 
         if (
             request

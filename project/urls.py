@@ -1,7 +1,8 @@
 from django.contrib import admin
-from django.http import HttpResponse
 from django.conf import settings
 from django.conf.urls.static import static
+from django.db import DatabaseError, connection
+from django.http import HttpResponse
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 
@@ -13,6 +14,11 @@ admin.site.index_title = _("Welcome to Wasla Admin Portal")
 
 
 def health_check(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+    except DatabaseError:
+        return HttpResponse("SERVICE UNAVAILABLE", status=503)
     return HttpResponse("OK")
 
 

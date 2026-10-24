@@ -28,6 +28,38 @@ Check that model changes have migrations:
 python manage.py makemigrations --check --dry-run
 ```
 
+Never edit an applied migration to represent a new model change. Add a new
+migration and verify both forward and reverse behavior when the data change is
+non-trivial.
+
+## Tests
+
+Run the full Django suite:
+
+```bash
+python manage.py test
+```
+
+Run one app or test module while iterating:
+
+```bash
+python manage.py test apps.store
+python manage.py test apps.store.test_search
+```
+
+The CI suite uses PostgreSQL. SQLite is convenient locally, but changes to
+queries, constraints, migrations, or transaction handling should also be
+verified against PostgreSQL through Docker or the pull-request pipeline.
+
+Run the container integration checks directly:
+
+```bash
+tests/integration/test_volume_initialization.sh
+tests/integration/test_nginx_healthcheck.sh
+```
+
+## Dependencies
+
 Regenerate the production dependency lock after changing `requirements/base.txt`:
 
 ```bash
@@ -39,6 +71,10 @@ Audit the locked production dependencies:
 ```bash
 pip-audit --require-hashes -r requirements/base.lock
 ```
+
+`requirements/base.txt` is the human-maintained production input.
+`requirements/base.lock` is the generated, hashed deployment lock and must be
+committed whenever the input changes.
 
 ## Formatting
 
@@ -68,9 +104,11 @@ Create or refresh bilingual development data:
 python manage.py seed_data
 ```
 
-The command is idempotent and seeds users, a guest user, ads, hierarchical
-categories, products, product images, and product reviews. It never deletes
-existing records and refuses to run when `ENV` is staging or production.
+The command is idempotent and seeds users, a guest user, ads, one brand, one
+branch, hierarchical categories, products, product images, and product
+reviews. It preserves the `Brand → Branch → Category → Product` ownership
+chain, never deletes existing records, and refuses to run when `ENV` is
+staging or production.
 
 The default demo accounts are:
 
@@ -87,6 +125,8 @@ Set another password for all seeded accounts with:
 python manage.py seed_data --password "AnotherStrongPassword123!"
 ```
 
+Custom passwords are never printed to command output.
+
 Operational cache rows and third-party token/session tables are intentionally
 not seeded.
 
@@ -97,3 +137,25 @@ docker compose up -d --build
 docker compose logs -f django
 docker compose down
 ```
+
+Run Django commands in the active stack with:
+
+```bash
+docker compose exec django python manage.py check
+docker compose exec django python manage.py test
+```
+
+## Pull-Request Quality Gate
+
+Before opening a pull request, run at least:
+
+```bash
+python manage.py check
+python manage.py makemigrations --check --dry-run
+python manage.py compilemessages --ignore ".venv/*" --verbosity 0
+python manage.py test
+python -m black --check .
+```
+
+CI additionally verifies production settings, the dependency lock and audit,
+PostgreSQL behavior, writable container volumes, and the Nginx healthcheck.

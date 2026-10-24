@@ -26,11 +26,18 @@ if REST_FRAMEWORK["NUM_PROXIES"] < 1:
     )
 
 UNCONFIGURED_OTP_BACKEND = "apps.authentication.otp.UnconfiguredOtpDeliveryBackend"
+EMAIL_OTP_BACKEND = "apps.authentication.otp.EmailOtpDeliveryBackend"
 WEBHOOK_OTP_BACKEND = "apps.authentication.otp.WebhookOtpDeliveryBackend"
+SUPPORTED_OTP_BACKENDS = {EMAIL_OTP_BACKEND, WEBHOOK_OTP_BACKEND}
 
 if AUTH_OTP_DELIVERY_BACKEND == UNCONFIGURED_OTP_BACKEND:
     raise ImproperlyConfigured(
         "AUTH_OTP_DELIVERY_BACKEND must be configured in deployed environments."
+    )
+
+if AUTH_OTP_DELIVERY_BACKEND not in SUPPORTED_OTP_BACKENDS:
+    raise ImproperlyConfigured(
+        "AUTH_OTP_DELIVERY_BACKEND must select a supported OTP delivery backend."
     )
 
 if AUTH_OTP_DELIVERY_BACKEND == WEBHOOK_OTP_BACKEND:
@@ -41,6 +48,25 @@ if AUTH_OTP_DELIVERY_BACKEND == WEBHOOK_OTP_BACKEND:
         )
     if urlparse(AUTH_OTP_WEBHOOK_URL).scheme != "https":
         raise ImproperlyConfigured("AUTH_OTP_WEBHOOK_URL must use HTTPS.")
+
+if AUTH_OTP_DELIVERY_BACKEND == EMAIL_OTP_BACKEND:
+    if EMAIL_BACKEND != "django.core.mail.backends.smtp.EmailBackend":
+        raise ImproperlyConfigured(
+            "EmailOtpDeliveryBackend requires Django's SMTP email backend when "
+            "deployed."
+        )
+    if not all([EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD]) or (
+        not DEFAULT_FROM_EMAIL or DEFAULT_FROM_EMAIL == "no-reply@wasla.local"
+    ):
+        raise ImproperlyConfigured(
+            "EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, and "
+            "DEFAULT_FROM_EMAIL are required for deployed email OTP delivery."
+        )
+    if EMAIL_USE_TLS == EMAIL_USE_SSL:
+        raise ImproperlyConfigured(
+            "Deployed email OTP delivery must enable exactly one of EMAIL_USE_TLS "
+            "or EMAIL_USE_SSL."
+        )
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
