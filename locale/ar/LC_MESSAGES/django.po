@@ -331,6 +331,30 @@ msgstr "يجب أن يكون السعر قبل الخصم أكبر من السع
 msgid "Choose only from product, category, and ad."
 msgstr "اختر فقط من المنتج أو الفئة أو الإعلان."
 
+msgid "Choose only from product, category, brand, branch, and ad."
+msgstr "اختر فقط من المنتج أو التصنيف أو العلامة التجارية أو الفرع أو الإعلان."
+
+msgid "Category and parent must belong to the same branch."
+msgstr "يجب أن ينتمي التصنيف والتصنيف الأب إلى الفرع نفسه."
+
+msgid "Category and children must belong to the same branch."
+msgstr "يجب أن ينتمي التصنيف والتصنيفات الفرعية إلى الفرع نفسه."
+
+msgid "This catalog resource is in use and cannot be deleted."
+msgstr "عنصر الكتالوج هذا قيد الاستخدام ولا يمكن حذفه."
+
+msgid "brand"
+msgstr "العلامة التجارية"
+
+msgid "brands"
+msgstr "العلامات التجارية"
+
+msgid "branch"
+msgstr "الفرع"
+
+msgid "branches"
+msgstr "الفروع"
+
 msgid "Error"
 msgstr "خطأ"
 

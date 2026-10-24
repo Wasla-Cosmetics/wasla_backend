@@ -25,16 +25,6 @@ def assign_existing_categories(apps, schema_editor):
     Category.objects.update(branch=branch)
 
 
-def remove_default_hierarchy(apps, schema_editor):
-    Brand = apps.get_model("store", "Brand")
-    Branch = apps.get_model("store", "Branch")
-    Category = apps.get_model("store", "Category")
-
-    Category.objects.update(branch=None)
-    Branch.objects.filter(title_en="Main Branch", brand__title_en="Wasla").delete()
-    Brand.objects.filter(title_en="Wasla", branches__isnull=True).delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -155,7 +145,7 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             assign_existing_categories,
-            remove_default_hierarchy,
+            migrations.RunPython.noop,
         ),
         migrations.AlterField(
             model_name="category",

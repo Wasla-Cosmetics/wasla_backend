@@ -6,7 +6,15 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.authentication.models import GuestUser
-from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
+from apps.store.models import (
+    Ad,
+    Brand,
+    Branch,
+    Category,
+    Product,
+    ProductImage,
+    ProductReview,
+)
 
 
 class Command(BaseCommand):
@@ -34,15 +42,16 @@ class Command(BaseCommand):
             users = self._seed_users(password)
             self._seed_guest_user()
             self._seed_ads()
-            categories = self._seed_categories()
+            branch = self._seed_catalog_owners()
+            categories = self._seed_categories(branch)
             products = self._seed_products(categories)
             self._seed_product_images(products)
             self._seed_product_reviews(products, users)
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Seed data ready: 3 users, 1 guest, 2 ads, 6 categories, "
-                "6 products, 12 product images, and 6 product reviews."
+                "Seed data ready: 3 users, 1 guest, 2 ads, 1 brand, 1 branch, "
+                "6 categories, 6 products, 12 product images, and 6 product reviews."
             )
         )
         self.stdout.write("Admin phone: +201000000001")
@@ -125,7 +134,27 @@ class Command(BaseCommand):
                 },
             )
 
-    def _seed_categories(self):
+    def _seed_catalog_owners(self):
+        brand, _ = Brand.objects.update_or_create(
+            title_en="Wasla",
+            defaults={
+                "title": "Wasla",
+                "title_ar": "وصلة",
+                "image": "default.jpeg",
+            },
+        )
+        branch, _ = Branch.objects.update_or_create(
+            brand=brand,
+            title_en="Main Branch",
+            defaults={
+                "title": "Main Branch",
+                "title_ar": "الفرع الرئيسي",
+                "image": "default.jpeg",
+            },
+        )
+        return branch
+
+    def _seed_categories(self, branch):
         categories = {}
         roots = (
             ("skincare", "Skincare", "العناية بالبشرة"),
@@ -140,6 +169,7 @@ class Command(BaseCommand):
 
         for key, title_en, title_ar in roots:
             category, _ = Category.objects.update_or_create(
+                branch=branch,
                 title_en=title_en,
                 defaults={
                     "title": title_en,
@@ -152,6 +182,7 @@ class Command(BaseCommand):
 
         for key, title_en, title_ar, parent_key in children:
             category, _ = Category.objects.update_or_create(
+                branch=branch,
                 title_en=title_en,
                 defaults={
                     "title": title_en,

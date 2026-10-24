@@ -87,6 +87,37 @@ class CatalogSearchApiTests(APITestCase):
         self.assertEqual(results[("product", product.id)]["title"], "Facial Oil")
         self.assertEqual(results[("ad", ad.id)]["title"], "Weekend Offer")
 
+    def test_search_matches_brand_and_branch_in_any_language(self):
+        brand = Brand.objects.create(title_en="Luma", title_ar="لوما")
+        branch = Branch.objects.create(
+            brand=brand,
+            title_en="Alexandria",
+            title_ar="الإسكندرية",
+        )
+
+        response = self.client.get(
+            reverse("catalog-search"),
+            {"q": "لوما", "types": "brand,branch"},
+            HTTP_ACCEPT_LANGUAGE="en",
+        )
+        branch_response = self.client.get(
+            reverse("catalog-search"),
+            {"q": "alex", "types": "branch"},
+            HTTP_ACCEPT_LANGUAGE="all",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["pagination"]["count"], 1)
+        self.assertEqual(response.data["data"][0]["type"], "brand")
+        self.assertEqual(response.data["data"][0]["id"], brand.id)
+        self.assertEqual(response.data["data"][0]["title"], "Luma")
+        self.assertEqual(branch_response.status_code, status.HTTP_200_OK)
+        result = branch_response.data["data"][0]
+        self.assertEqual(result["type"], "branch")
+        self.assertEqual(result["id"], branch.id)
+        self.assertEqual(result["title_ar"], "الإسكندرية")
+        self.assertEqual(result["brand"]["title_ar"], "لوما")
+
     def test_search_localizes_output_without_limiting_match_language(self):
         product = self.create_product()
 

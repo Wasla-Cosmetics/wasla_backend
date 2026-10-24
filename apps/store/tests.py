@@ -13,7 +13,14 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.store.admin import AdAdmin, CategoryAdmin, ProductAdmin, ProductReviewAdmin
+from apps.store.admin import (
+    AdAdmin,
+    BrandAdmin,
+    BranchAdmin,
+    CategoryAdmin,
+    ProductAdmin,
+    ProductReviewAdmin,
+)
 from apps.store.models import (
     Ad,
     Brand,
@@ -473,6 +480,24 @@ class StoreAdminSearchTests(TestCase):
         queryset = self.search(AdAdmin, Ad, "اكتشف")
 
         self.assertQuerySetEqual(queryset, [self.ad], ordered=False)
+
+    def test_brand_admin_searches_arabic_title(self):
+        self.brand.title_en = "Luma"
+        self.brand.title_ar = "لوما"
+        self.brand.save()
+
+        queryset = self.search(BrandAdmin, Brand, "لوما")
+
+        self.assertQuerySetEqual(queryset, [self.brand], ordered=False)
+
+    def test_branch_admin_searches_arabic_brand_title(self):
+        self.brand.title_en = "Luma"
+        self.brand.title_ar = "لوما"
+        self.brand.save()
+
+        queryset = self.search(BranchAdmin, Branch, "لوما")
+
+        self.assertQuerySetEqual(queryset, [self.branch], ordered=False)
 
     def test_category_admin_searches_arabic_title(self):
         queryset = self.search(CategoryAdmin, Category, "الجمال")

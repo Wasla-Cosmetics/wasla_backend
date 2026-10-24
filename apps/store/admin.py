@@ -3,11 +3,35 @@ from mptt.admin import DraggableMPTTAdmin
 from modeltranslation.admin import TranslationAdmin
 
 from apps.core.translation import get_localized_field_names
-from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
+from apps.store.models import (
+    Ad,
+    Brand,
+    Branch,
+    Category,
+    Product,
+    ProductImage,
+    ProductReview,
+)
 
 
 class DraggableTranslationAdmin(TranslationAdmin, DraggableMPTTAdmin):
     pass
+
+
+@admin.register(Brand)
+class BrandAdmin(TranslationAdmin):
+    list_display = ("title", "created_at", "updated_at")
+    search_fields = get_localized_field_names("title")
+
+
+@admin.register(Branch)
+class BranchAdmin(TranslationAdmin):
+    list_display = ("title", "brand", "created_at", "updated_at")
+    list_filter = ("brand",)
+    search_fields = (
+        *get_localized_field_names("title"),
+        *get_localized_field_names("brand__title"),
+    )
 
 
 @admin.register(Ad)
@@ -19,9 +43,14 @@ class AdAdmin(TranslationAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(DraggableTranslationAdmin):
-    list_display = ("tree_actions", "indented_title", "parent")
+    list_display = ("tree_actions", "indented_title", "branch", "parent")
     list_display_links = ("indented_title",)
-    search_fields = get_localized_field_names("title")
+    list_filter = ("branch__brand", "branch")
+    search_fields = (
+        *get_localized_field_names("title"),
+        *get_localized_field_names("branch__title"),
+        *get_localized_field_names("branch__brand__title"),
+    )
 
 
 class ProductImageInline(admin.TabularInline):
@@ -43,8 +72,19 @@ class ProductAdmin(TranslationAdmin):
         "is_newest",
         "is_best_seller",
     )
-    list_filter = ("category", "is_newest", "is_best_seller")
-    search_fields = get_localized_field_names("title", "description")
+    list_filter = (
+        "category__branch__brand",
+        "category__branch",
+        "category",
+        "is_newest",
+        "is_best_seller",
+    )
+    search_fields = (
+        *get_localized_field_names("title", "description"),
+        *get_localized_field_names("category__title"),
+        *get_localized_field_names("category__branch__title"),
+        *get_localized_field_names("category__branch__brand__title"),
+    )
 
 
 @admin.register(ProductReview)
