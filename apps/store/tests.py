@@ -14,7 +14,15 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.store.admin import AdAdmin, CategoryAdmin, ProductAdmin, ProductReviewAdmin
-from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
+from apps.store.models import (
+    Ad,
+    Brand,
+    Branch,
+    Category,
+    Product,
+    ProductImage,
+    ProductReview,
+)
 from apps.store.serializers import ProductSerializer
 
 
@@ -23,6 +31,8 @@ class StoreApiTests(APITestCase):
     def setUp(self):
         translation.deactivate()
         self.addCleanup(translation.deactivate)
+        self.brand = Brand.objects.create(title="Wasla")
+        self.branch = Branch.objects.create(brand=self.brand, title="Main Branch")
 
     @staticmethod
     def image(name="image.jpg"):
@@ -53,9 +63,16 @@ class StoreApiTests(APITestCase):
         )
 
     def test_category_endpoint_exposes_parent(self):
-        parent = Category.objects.create(title="Beauty", image=self.image("parent.jpg"))
+        parent = Category.objects.create(
+            branch=self.branch,
+            title="Beauty",
+            image=self.image("parent.jpg"),
+        )
         Category.objects.create(
-            title="Skin Care", image=self.image("child.jpg"), parent=parent
+            branch=self.branch,
+            title="Skin Care",
+            image=self.image("child.jpg"),
+            parent=parent,
         )
 
         response = self.client.get(reverse("categories-list"))
@@ -68,7 +85,7 @@ class StoreApiTests(APITestCase):
 
     def test_products_endpoint_uses_default_price_not_legacy_price(self):
         category = Category.objects.create(
-            title="Beauty", image=self.image("category.jpg")
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
         )
         Product.objects.create(
             category=category,
@@ -92,7 +109,7 @@ class StoreApiTests(APITestCase):
 
     def test_products_endpoint_returns_compare_price_and_discount_percentage(self):
         category = Category.objects.create(
-            title="Beauty", image=self.image("category.jpg")
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
         )
         Product.objects.create(
             category=category,
@@ -113,7 +130,7 @@ class StoreApiTests(APITestCase):
 
     def test_product_serializer_rejects_compare_price_not_above_default_price(self):
         category = Category.objects.create(
-            title="Beauty", image=self.image("category.jpg")
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
         )
         serializer = ProductSerializer(
             data={
@@ -130,7 +147,7 @@ class StoreApiTests(APITestCase):
 
     def test_product_database_rejects_compare_price_not_above_default_price(self):
         category = Category.objects.create(
-            title="Beauty", image=self.image("category.jpg")
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
         )
 
         with self.assertRaises(IntegrityError):
@@ -145,7 +162,7 @@ class StoreApiTests(APITestCase):
 
     def test_products_endpoint_cannot_disable_pagination(self):
         category = Category.objects.create(
-            title="Beauty", image=self.image("category.jpg")
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
         )
         Product.objects.create(
             category=category,
@@ -164,7 +181,7 @@ class StoreApiTests(APITestCase):
 
     def test_products_endpoint_fetches_categories_and_images_in_fixed_queries(self):
         category = Category.objects.create(
-            title="Beauty", image=self.image("category.jpg")
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
         )
         for index in range(5):
             Product.objects.create(
@@ -183,7 +200,7 @@ class StoreApiTests(APITestCase):
 
     def test_products_endpoint_returns_additional_images(self):
         category = Category.objects.create(
-            title="Beauty", image=self.image("category.jpg")
+            branch=self.branch, title="Beauty", image=self.image("category.jpg")
         )
         product = Product.objects.create(
             category=category,
@@ -262,6 +279,7 @@ class StoreApiTests(APITestCase):
 
     def test_categories_list_returns_all_translations_when_requested(self):
         Category.objects.create(
+            branch=self.branch,
             title_en="Beauty",
             title_ar="الجمال",
             image=self.image("translated-category.jpg"),
@@ -279,6 +297,7 @@ class StoreApiTests(APITestCase):
 
     def test_products_list_returns_all_translations_when_requested(self):
         category = Category.objects.create(
+            branch=self.branch,
             title_en="Beauty",
             title_ar="الجمال",
             image=self.image("translated-category.jpg"),
@@ -311,6 +330,7 @@ class StoreApiTests(APITestCase):
 
     def test_product_title_filter_matches_arabic_with_english_response(self):
         category = Category.objects.create(
+            branch=self.branch,
             title_en="Beauty",
             title_ar="الجمال",
             image=self.image("filter-category.jpg"),
@@ -338,6 +358,7 @@ class StoreApiTests(APITestCase):
 
     def test_product_title_filter_matches_english_with_arabic_response(self):
         category = Category.objects.create(
+            branch=self.branch,
             title_en="Beauty",
             title_ar="الجمال",
             image=self.image("filter-category.jpg"),
@@ -365,6 +386,7 @@ class StoreApiTests(APITestCase):
 
     def test_category_title_filter_matches_arabic_with_all_languages_response(self):
         category = Category.objects.create(
+            branch=self.branch,
             title_en="Beauty",
             title_ar="الجمال",
             image=self.image("filter-category.jpg"),
@@ -400,6 +422,8 @@ class StoreAdminSearchTests(TestCase):
 
     def setUp(self):
         self.request = RequestFactory().get("/admin/")
+        self.brand = Brand.objects.create(title="Wasla")
+        self.branch = Branch.objects.create(brand=self.brand, title="Main Branch")
         self.ad = Ad.objects.create(
             title_en="Natural Beauty",
             title_ar="الجمال الطبيعي",
@@ -408,6 +432,7 @@ class StoreAdminSearchTests(TestCase):
             image=self.image("admin-ad.jpg"),
         )
         self.category = Category.objects.create(
+            branch=self.branch,
             title_en="Beauty",
             title_ar="الجمال",
             image=self.image("admin-category.jpg"),
@@ -473,7 +498,10 @@ class ProductReviewApiTests(APITestCase):
 
     def setUp(self):
         self.user_model = get_user_model()
+        self.brand = Brand.objects.create(title="Wasla")
+        self.branch = Branch.objects.create(brand=self.brand, title="Main Branch")
         self.category = Category.objects.create(
+            branch=self.branch,
             title="Beauty",
             image=self.image("category.jpg"),
         )

@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.store.models import Ad, Category, Product
+from apps.store.models import Ad, Brand, Branch, Category, Product
 from apps.store.throttles import CatalogSearchRateThrottle
 
 
@@ -18,6 +18,8 @@ class CatalogSearchApiTests(APITestCase):
     def setUp(self):
         cache.clear()
         self.addCleanup(cache.clear)
+        self.brand = Brand.objects.create(title="Wasla")
+        self.branch = Branch.objects.create(brand=self.brand, title="Main Branch")
 
     @staticmethod
     def image(name="image.jpg"):
@@ -25,6 +27,7 @@ class CatalogSearchApiTests(APITestCase):
 
     def create_category(self, title_en="Beauty", title_ar="الجمال"):
         return Category.objects.create(
+            branch=self.branch,
             title_en=title_en,
             title_ar=title_ar,
             image=self.image(f"category-{Category.objects.count()}.jpg"),

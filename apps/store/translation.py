@@ -1,6 +1,16 @@
 from modeltranslation.translator import TranslationOptions, register
 
-from apps.store.models import Ad, Category, Product
+from apps.store.models import Ad, Brand, Branch, Category, Product
+
+
+@register(Brand)
+class BrandTranslationOptions(TranslationOptions):
+    fields = ("title",)
+
+
+@register(Branch)
+class BranchTranslationOptions(TranslationOptions):
+    fields = ("title",)
 
 
 @register(Ad)

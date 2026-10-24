@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -5,6 +6,48 @@ from django.utils.translation import gettext_lazy as _
 from mptt.models import MPTTModel, TreeForeignKey
 
 from apps.core.models import TimeStampedModel
+
+
+class Brand(TimeStampedModel):
+    title = models.CharField(_("title"), max_length=255)
+    image = models.ImageField(
+        _("image"),
+        upload_to="brands/",
+        default="default.jpeg",
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("brand")
+        verbose_name_plural = _("brands")
+        ordering = ["title"]
+
+    def __str__(self):
+        return self.title
+
+
+class Branch(TimeStampedModel):
+    brand = models.ForeignKey(
+        Brand,
+        related_name="branches",
+        on_delete=models.PROTECT,
+        verbose_name=_("brand"),
+    )
+    title = models.CharField(_("title"), max_length=255)
+    image = models.ImageField(
+        _("image"),
+        upload_to="branches/",
+        default="default.jpeg",
+        blank=True,
+    )
+
+    class Meta:
+        verbose_name = _("branch")
+        verbose_name_plural = _("branches")
+        ordering = ["title"]
+
+    def __str__(self):
+        return self.title
 
 
 class Ad(TimeStampedModel):
@@ -26,6 +69,12 @@ class Ad(TimeStampedModel):
 
 
 class Category(MPTTModel, TimeStampedModel):
+    branch = models.ForeignKey(
+        Branch,
+        related_name="categories",
+        on_delete=models.PROTECT,
+        verbose_name=_("branch"),
+    )
     title = models.CharField(_("title"), max_length=255)
     image = models.ImageField(
         _("image"),
@@ -48,6 +97,26 @@ class Category(MPTTModel, TimeStampedModel):
     class Meta:
         verbose_name = _("category")
         verbose_name_plural = _("categories")
+
+    def clean(self):
+        super().clean()
+        if (
+            self.parent_id
+            and self.branch_id
+            and self.parent.branch_id != self.branch_id
+        ):
+            raise ValidationError(
+                {"parent": _("Category and parent must belong to the same branch.")}
+            )
+
+        if (
+            self.pk
+            and self.branch_id
+            and self.subcategories.exclude(branch_id=self.branch_id).exists()
+        ):
+            raise ValidationError(
+                {"branch": _("Category and children must belong to the same branch.")}
+            )
 
     def __str__(self):
         return self.title
