@@ -1,10 +1,80 @@
 import ast
+from io import StringIO
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
-from django.test import SimpleTestCase, override_settings
+from django.core.management import CommandError, call_command
+from django.test import SimpleTestCase, TestCase, override_settings
 
+from apps.authentication.models import GuestUser, User
 from apps.core.signals import ensure_default_media
+from apps.store.models import Ad, Category, Product, ProductImage, ProductReview
+
+
+class SeedDataCommandTests(TestCase):
+    def test_seeds_all_domain_models_with_valid_relationships(self):
+        output = StringIO()
+
+        with patch.dict(os.environ, {"ENV": "local"}):
+            call_command("seed_data", stdout=output)
+
+        self.assertEqual(User.objects.count(), 3)
+        self.assertEqual(GuestUser.objects.count(), 1)
+        self.assertEqual(Ad.objects.count(), 2)
+        self.assertEqual(Category.objects.count(), 6)
+        self.assertEqual(Product.objects.count(), 6)
+        self.assertEqual(ProductImage.objects.count(), 12)
+        self.assertEqual(ProductReview.objects.count(), 6)
+        self.assertTrue(User.objects.filter(is_superuser=True, is_staff=True).exists())
+        self.assertTrue(Category.objects.filter(parent__isnull=False).exists())
+        self.assertTrue(Product.objects.filter(compare_at_price__isnull=False).exists())
+        self.assertFalse(Product.objects.filter(title_en__isnull=True).exists())
+        self.assertFalse(Product.objects.filter(title_ar__isnull=True).exists())
+        self.assertFalse(Product.objects.filter(description_en__isnull=True).exists())
+        self.assertFalse(Product.objects.filter(description_ar__isnull=True).exists())
+        self.assertTrue(
+            all(product.images.count() == 2 for product in Product.objects.all())
+        )
+        self.assertTrue(
+            all(product.reviews.count() == 1 for product in Product.objects.all())
+        )
+        self.assertIn("Seed data ready", output.getvalue())
+
+    def test_is_idempotent(self):
+        with patch.dict(os.environ, {"ENV": "development"}):
+            call_command("seed_data", stdout=StringIO())
+            first_counts = self._domain_model_counts()
+            call_command("seed_data", stdout=StringIO())
+
+        self.assertEqual(self._domain_model_counts(), first_counts)
+
+    def test_refuses_to_seed_staging_or_production(self):
+        for environment in ("staging", "production"):
+            with self.subTest(environment=environment), patch.dict(
+                os.environ, {"ENV": environment}
+            ):
+                with self.assertRaisesMessage(
+                    CommandError,
+                    "seed_data can run only in local or development environments.",
+                ):
+                    call_command("seed_data", stdout=StringIO())
+
+    @staticmethod
+    def _domain_model_counts():
+        return {
+            model: model.objects.count()
+            for model in (
+                User,
+                GuestUser,
+                Ad,
+                Category,
+                Product,
+                ProductImage,
+                ProductReview,
+            )
+        }
 
 
 class DefaultMediaTests(SimpleTestCase):
