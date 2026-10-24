@@ -55,7 +55,7 @@ container startup Django runs:
 ```bash
 python manage.py collectstatic --no-input
 python manage.py migrate
-gunicorn project.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 2 --timeout 0
+gunicorn project.asgi:application -k uvicorn_worker.UvicornWorker --bind 0.0.0.0:8000 --workers 2 --timeout 0
 ```
 
 The migration step also ensures `default.jpeg` exists in the configured media
