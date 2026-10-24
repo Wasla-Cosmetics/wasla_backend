@@ -1,11 +1,13 @@
 from datetime import timedelta
 import json
 from secrets import randbelow
+from smtplib import SMTPException
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
+from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
@@ -22,13 +24,32 @@ class OtpDeliveryUnavailable(APIException):
 
 
 class UnconfiguredOtpDeliveryBackend:
-    def send(self, phone, otp):
+    def send(self, user, otp):
         raise OtpDeliveryUnavailable()
 
 
+class EmailOtpDeliveryBackend:
+    def send(self, user, otp):
+        try:
+            sent_count = send_mail(
+                _("Your Wasla verification code"),
+                _(
+                    "Your verification code is %(otp)s. "
+                    "It expires in %(minutes)s minutes."
+                )
+                % {"otp": otp, "minutes": settings.AUTH_OTP_TTL_MINUTES},
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+            )
+        except (OSError, SMTPException) as exc:
+            raise OtpDeliveryUnavailable() from exc
+        if sent_count != 1:
+            raise OtpDeliveryUnavailable()
+
+
 class WebhookOtpDeliveryBackend:
-    def send(self, phone, otp):
-        payload = json.dumps({"phone": phone, "otp": otp}).encode("utf-8")
+    def send(self, user, otp):
+        payload = json.dumps({"phone": user.phone, "otp": otp}).encode("utf-8")
         request = Request(
             settings.AUTH_OTP_WEBHOOK_URL,
             data=payload,
@@ -76,7 +97,7 @@ def issue_otp(user, purpose):
     user.save(update_fields=["otp", "otp_purpose", "otp_expires_at"])
 
     try:
-        get_delivery_backend().send(user.phone, otp)
+        get_delivery_backend().send(user, otp)
     except Exception:
         clear_otp(user)
         raise

@@ -1,10 +1,12 @@
 from datetime import timedelta
 import json
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
+from django.core import mail
 from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -16,15 +18,46 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 from .models import GuestUser
-from .otp import WebhookOtpDeliveryBackend
+from .otp import (
+    EmailOtpDeliveryBackend,
+    OtpDeliveryUnavailable,
+    WebhookOtpDeliveryBackend,
+)
 from .tokens import create_password_reset_token, create_refresh_token
 
 
 class RecordingOtpBackend:
     messages = []
 
-    def send(self, phone, otp):
-        self.messages.append({"phone": phone, "otp": otp})
+    def send(self, user, otp):
+        self.messages.append({"phone": user.phone, "email": user.email, "otp": otp})
+
+
+class EmailOtpDeliveryBackendTests(SimpleTestCase):
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        DEFAULT_FROM_EMAIL="no-reply@wasla.test",
+        AUTH_OTP_TTL_MINUTES=10,
+    )
+    def test_sends_otp_to_users_registered_email(self):
+        user = SimpleNamespace(email="customer@example.com")
+
+        EmailOtpDeliveryBackend().send(user, "654321")
+
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertEqual(message.to, ["customer@example.com"])
+        self.assertEqual(message.from_email, "no-reply@wasla.test")
+        self.assertEqual(message.subject, "Your Wasla verification code")
+        self.assertIn("654321", message.body)
+        self.assertIn("10 minutes", message.body)
+
+    @patch("apps.authentication.otp.send_mail", side_effect=OSError)
+    def test_reports_smtp_connection_failures_as_unavailable(self, mocked_send_mail):
+        user = SimpleNamespace(email="customer@example.com")
+
+        with self.assertRaises(OtpDeliveryUnavailable):
+            EmailOtpDeliveryBackend().send(user, "654321")
 
 
 class WebhookOtpDeliveryBackendTests(SimpleTestCase):
@@ -38,7 +71,8 @@ class WebhookOtpDeliveryBackendTests(SimpleTestCase):
         response = MagicMock(status=202)
         mocked_urlopen.return_value.__enter__.return_value = response
 
-        WebhookOtpDeliveryBackend().send("+201000000001", "654321")
+        user = SimpleNamespace(phone="+201000000001")
+        WebhookOtpDeliveryBackend().send(user, "654321")
 
         request = mocked_urlopen.call_args.args[0]
         self.assertEqual(request.full_url, "https://sms.example.com/otp")

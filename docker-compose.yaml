@@ -1,6 +1,24 @@
 name: ${SERVER_NAME:-local_wasla_backend_server}
 
 services:
+  mailpit:
+    image: axllent/mailpit:v1.32.0
+    profiles: [mailpit]
+    ports:
+      - 127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025
+      - 127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025
+    restart: unless-stopped
+    volumes:
+      - mailpit_data:/data
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 500
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   nginx:
     image: nginx:1.30.4-alpine
     depends_on:
@@ -98,5 +116,6 @@ services:
 
 volumes:
   db_data:
+  mailpit_data:
   media:
   staticfiles:

@@ -123,9 +123,20 @@ jobs:
           DEV_CSRF_TRUSTED_ORIGINS: ${{ vars.DEV_CSRF_TRUSTED_ORIGINS }}
           STAGE_CSRF_TRUSTED_ORIGINS: ${{ vars.STAGE_CSRF_TRUSTED_ORIGINS }}
           MASTER_CSRF_TRUSTED_ORIGINS: ${{ vars.MASTER_CSRF_TRUSTED_ORIGINS }}
-          DEV_OTP_WEBHOOK_URL: ${{ vars.DEV_OTP_WEBHOOK_URL }}
           STAGE_OTP_WEBHOOK_URL: ${{ vars.STAGE_OTP_WEBHOOK_URL }}
           MASTER_OTP_WEBHOOK_URL: ${{ vars.MASTER_OTP_WEBHOOK_URL }}
+          STAGE_OTP_DELIVERY_BACKEND: ${{ vars.STAGE_OTP_DELIVERY_BACKEND }}
+          MASTER_OTP_DELIVERY_BACKEND: ${{ vars.MASTER_OTP_DELIVERY_BACKEND }}
+          STAGE_EMAIL_HOST: ${{ vars.STAGE_EMAIL_HOST }}
+          MASTER_EMAIL_HOST: ${{ vars.MASTER_EMAIL_HOST }}
+          STAGE_EMAIL_PORT: ${{ vars.STAGE_EMAIL_PORT }}
+          MASTER_EMAIL_PORT: ${{ vars.MASTER_EMAIL_PORT }}
+          STAGE_EMAIL_USE_TLS: ${{ vars.STAGE_EMAIL_USE_TLS }}
+          MASTER_EMAIL_USE_TLS: ${{ vars.MASTER_EMAIL_USE_TLS }}
+          STAGE_EMAIL_USE_SSL: ${{ vars.STAGE_EMAIL_USE_SSL }}
+          MASTER_EMAIL_USE_SSL: ${{ vars.MASTER_EMAIL_USE_SSL }}
+          STAGE_DEFAULT_FROM_EMAIL: ${{ vars.STAGE_DEFAULT_FROM_EMAIL }}
+          MASTER_DEFAULT_FROM_EMAIL: ${{ vars.MASTER_DEFAULT_FROM_EMAIL }}
         run: |
           set -euo pipefail
           case "$BRANCH" in
@@ -136,7 +147,14 @@ jobs:
               postgres_host_port="${DEV_POSTGRES_HOST_PORT:-5432}"
               allowed_hosts="$DEV_ALLOWED_HOSTS"
               csrf_origins="$DEV_CSRF_TRUSTED_ORIGINS"
-              otp_webhook_url="$DEV_OTP_WEBHOOK_URL"
+              otp_delivery_backend="apps.authentication.otp.EmailOtpDeliveryBackend"
+              otp_webhook_url=""
+              compose_profiles=mailpit
+              email_host=mailpit
+              email_port=1025
+              email_use_tls=False
+              email_use_ssl=False
+              default_from_email=no-reply@dev.wasla.local
               hsts_seconds=0
               environment=development
               ;;
@@ -147,7 +165,14 @@ jobs:
               postgres_host_port="${STAGE_POSTGRES_HOST_PORT:-5432}"
               allowed_hosts="$STAGE_ALLOWED_HOSTS"
               csrf_origins="$STAGE_CSRF_TRUSTED_ORIGINS"
+              otp_delivery_backend="${STAGE_OTP_DELIVERY_BACKEND:-apps.authentication.otp.WebhookOtpDeliveryBackend}"
               otp_webhook_url="$STAGE_OTP_WEBHOOK_URL"
+              compose_profiles=""
+              email_host="$STAGE_EMAIL_HOST"
+              email_port="${STAGE_EMAIL_PORT:-587}"
+              email_use_tls="${STAGE_EMAIL_USE_TLS:-True}"
+              email_use_ssl="${STAGE_EMAIL_USE_SSL:-False}"
+              default_from_email="$STAGE_DEFAULT_FROM_EMAIL"
               hsts_seconds=86400
               environment=staging
               ;;
@@ -158,7 +183,14 @@ jobs:
               postgres_host_port="${MASTER_POSTGRES_HOST_PORT:-5432}"
               allowed_hosts="$MASTER_ALLOWED_HOSTS"
               csrf_origins="$MASTER_CSRF_TRUSTED_ORIGINS"
+              otp_delivery_backend="${MASTER_OTP_DELIVERY_BACKEND:-apps.authentication.otp.WebhookOtpDeliveryBackend}"
               otp_webhook_url="$MASTER_OTP_WEBHOOK_URL"
+              compose_profiles=""
+              email_host="$MASTER_EMAIL_HOST"
+              email_port="${MASTER_EMAIL_PORT:-587}"
+              email_use_tls="${MASTER_EMAIL_USE_TLS:-True}"
+              email_use_ssl="${MASTER_EMAIL_USE_SSL:-False}"
+              default_from_email="$MASTER_DEFAULT_FROM_EMAIL"
               hsts_seconds=31536000
               environment=production
               ;;
@@ -173,7 +205,15 @@ jobs:
             echo "POSTGRES_HOST_PORT=$postgres_host_port"
             echo "ALLOWED_HOSTS=$allowed_hosts"
             echo "CSRF_TRUSTED_ORIGINS=$csrf_origins"
+            echo "COMPOSE_PROFILES=$compose_profiles"
+            echo "OTP_DELIVERY_BACKEND=$otp_delivery_backend"
             echo "OTP_WEBHOOK_URL=$otp_webhook_url"
+            echo "EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend"
+            echo "EMAIL_HOST=$email_host"
+            echo "EMAIL_PORT=$email_port"
+            echo "EMAIL_USE_TLS=$email_use_tls"
+            echo "EMAIL_USE_SSL=$email_use_ssl"
+            echo "DEFAULT_FROM_EMAIL=$default_from_email"
             echo "SECURE_HSTS_SECONDS=$hsts_seconds"
             echo "DEPLOY_SHA=$(git rev-parse HEAD)"
             echo "ENV=$environment"
@@ -197,9 +237,12 @@ jobs:
           GH_DEV_POSTGRES_PASSWORD: ${{ secrets.DEV_POSTGRES_PASSWORD }}
           GH_STAGE_POSTGRES_PASSWORD: ${{ secrets.STAGE_POSTGRES_PASSWORD }}
           GH_MASTER_POSTGRES_PASSWORD: ${{ secrets.MASTER_POSTGRES_PASSWORD }}
-          GH_DEV_OTP_WEBHOOK_TOKEN: ${{ secrets.DEV_OTP_WEBHOOK_TOKEN }}
           GH_STAGE_OTP_WEBHOOK_TOKEN: ${{ secrets.STAGE_OTP_WEBHOOK_TOKEN }}
           GH_MASTER_OTP_WEBHOOK_TOKEN: ${{ secrets.MASTER_OTP_WEBHOOK_TOKEN }}
+          GH_STAGE_EMAIL_HOST_USER: ${{ secrets.STAGE_EMAIL_HOST_USER }}
+          GH_MASTER_EMAIL_HOST_USER: ${{ secrets.MASTER_EMAIL_HOST_USER }}
+          GH_STAGE_EMAIL_HOST_PASSWORD: ${{ secrets.STAGE_EMAIL_HOST_PASSWORD }}
+          GH_MASTER_EMAIL_HOST_PASSWORD: ${{ secrets.MASTER_EMAIL_HOST_PASSWORD }}
         run: |
           set -euo pipefail
           case "$GIT_BRANCH" in
@@ -208,7 +251,9 @@ jobs:
               postgres_db="$GH_DEV_POSTGRES_DB"
               postgres_user="$GH_DEV_POSTGRES_USER"
               postgres_password="$GH_DEV_POSTGRES_PASSWORD"
-              otp_webhook_token="$GH_DEV_OTP_WEBHOOK_TOKEN"
+              otp_webhook_token=""
+              email_host_user=""
+              email_host_password=""
               ;;
             stage)
               secret_key="$GH_STAGE_SECRET_KEY"
@@ -216,6 +261,8 @@ jobs:
               postgres_user="$GH_STAGE_POSTGRES_USER"
               postgres_password="$GH_STAGE_POSTGRES_PASSWORD"
               otp_webhook_token="$GH_STAGE_OTP_WEBHOOK_TOKEN"
+              email_host_user="$GH_STAGE_EMAIL_HOST_USER"
+              email_host_password="$GH_STAGE_EMAIL_HOST_PASSWORD"
               ;;
             master)
               secret_key="$GH_MASTER_SECRET_KEY"
@@ -223,10 +270,27 @@ jobs:
               postgres_user="$GH_MASTER_POSTGRES_USER"
               postgres_password="$GH_MASTER_POSTGRES_PASSWORD"
               otp_webhook_token="$GH_MASTER_OTP_WEBHOOK_TOKEN"
+              email_host_user="$GH_MASTER_EMAIL_HOST_USER"
+              email_host_password="$GH_MASTER_EMAIL_HOST_PASSWORD"
               ;;
           esac
 
-          required=(GH_SSH_HOST GH_SSH_PORT GH_SSH_USER GH_SSH_PASSWORD secret_key postgres_db postgres_user postgres_password otp_webhook_token ALLOWED_HOSTS OTP_WEBHOOK_URL)
+          required=(GH_SSH_HOST GH_SSH_PORT GH_SSH_USER GH_SSH_PASSWORD secret_key postgres_db postgres_user postgres_password ALLOWED_HOSTS)
+          case "$OTP_DELIVERY_BACKEND" in
+            apps.authentication.otp.EmailOtpDeliveryBackend)
+              required+=(EMAIL_HOST DEFAULT_FROM_EMAIL)
+              if [ "$GIT_BRANCH" != dev ]; then
+                required+=(email_host_user email_host_password)
+              fi
+              ;;
+            apps.authentication.otp.WebhookOtpDeliveryBackend)
+              required+=(otp_webhook_token OTP_WEBHOOK_URL)
+              ;;
+            *)
+              echo "Unsupported OTP delivery backend: $OTP_DELIVERY_BACKEND" >&2
+              exit 1
+              ;;
+          esac
           missing=()
           for name in "${required[@]}"; do
             if [ -z "${!name:-}" ]; then missing+=("$name"); fi
@@ -246,6 +310,8 @@ jobs:
             echo "POSTGRES_USER=$postgres_user"
             echo "POSTGRES_PASSWORD=$postgres_password"
             echo "OTP_WEBHOOK_TOKEN=$otp_webhook_token"
+            echo "EMAIL_HOST_USER=$email_host_user"
+            echo "EMAIL_HOST_PASSWORD=$email_host_password"
           } >> "$GITHUB_ENV"
 
       - name: Deploy via SSH
@@ -255,7 +321,7 @@ jobs:
           port: ${{ env.SSH_PORT }}
           username: ${{ env.SSH_USER }}
           password: ${{ env.SSH_PASSWORD }}
-          envs: GIT_BRANCH,DEPLOY_SHA,DEPLOY_PATH,SERVER_NAME,DJANGO_PORT,POSTGRES_HOST_PORT,ENV,SECRET_KEY,ALLOWED_HOSTS,CSRF_TRUSTED_ORIGINS,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,OTP_WEBHOOK_URL,OTP_WEBHOOK_TOKEN,SECURE_HSTS_SECONDS
+          envs: GIT_BRANCH,DEPLOY_SHA,DEPLOY_PATH,SERVER_NAME,DJANGO_PORT,POSTGRES_HOST_PORT,COMPOSE_PROFILES,ENV,SECRET_KEY,ALLOWED_HOSTS,CSRF_TRUSTED_ORIGINS,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,OTP_DELIVERY_BACKEND,OTP_WEBHOOK_URL,OTP_WEBHOOK_TOKEN,EMAIL_BACKEND,EMAIL_HOST,EMAIL_PORT,EMAIL_HOST_USER,EMAIL_HOST_PASSWORD,EMAIL_USE_TLS,EMAIL_USE_SSL,DEFAULT_FROM_EMAIL,SECURE_HSTS_SECONDS
           script: |
             set -euo pipefail
             cd "$DEPLOY_PATH"
@@ -281,6 +347,7 @@ jobs:
             write_env_var SERVER_NAME "$SERVER_NAME"
             write_env_var DJANGO_IMAGE "wasla_backend:$GIT_BRANCH"
             write_env_var DJANGO_PORT "$DJANGO_PORT"
+            write_env_var COMPOSE_PROFILES "$COMPOSE_PROFILES"
             write_env_var ENV "$ENV"
             write_env_var SECRET_KEY "$SECRET_KEY"
             write_env_var ALLOWED_HOSTS "$ALLOWED_HOSTS"
@@ -290,9 +357,21 @@ jobs:
             write_env_var CSRF_COOKIE_SECURE "True"
             write_env_var SECURE_SSL_REDIRECT "True"
             write_env_var SECURE_HSTS_SECONDS "$SECURE_HSTS_SECONDS"
-            write_env_var AUTH_OTP_DELIVERY_BACKEND "apps.authentication.otp.WebhookOtpDeliveryBackend"
-            write_env_var AUTH_OTP_WEBHOOK_URL "$OTP_WEBHOOK_URL"
-            write_env_var AUTH_OTP_WEBHOOK_TOKEN "$OTP_WEBHOOK_TOKEN"
+            write_env_var AUTH_OTP_DELIVERY_BACKEND "$OTP_DELIVERY_BACKEND"
+            if [ "$OTP_DELIVERY_BACKEND" = "apps.authentication.otp.WebhookOtpDeliveryBackend" ]; then
+              write_env_var AUTH_OTP_WEBHOOK_URL "$OTP_WEBHOOK_URL"
+              write_env_var AUTH_OTP_WEBHOOK_TOKEN "$OTP_WEBHOOK_TOKEN"
+            else
+              write_env_var EMAIL_BACKEND "$EMAIL_BACKEND"
+              write_env_var EMAIL_HOST "$EMAIL_HOST"
+              write_env_var EMAIL_PORT "$EMAIL_PORT"
+              write_env_var EMAIL_HOST_USER "$EMAIL_HOST_USER"
+              write_env_var EMAIL_HOST_PASSWORD "$EMAIL_HOST_PASSWORD"
+              write_env_var EMAIL_USE_TLS "$EMAIL_USE_TLS"
+              write_env_var EMAIL_USE_SSL "$EMAIL_USE_SSL"
+              write_env_var EMAIL_TIMEOUT_SECONDS "10"
+              write_env_var DEFAULT_FROM_EMAIL "$DEFAULT_FROM_EMAIL"
+            fi
             write_env_var DATABASE_TYPE "postgres"
             write_env_var POSTGRES_DB "$POSTGRES_DB"
             write_env_var POSTGRES_USER "$POSTGRES_USER"

@@ -23,7 +23,16 @@ Use SQLite for local-only commands:
 ```env
 DATABASE_TYPE=sqlite3
 SQLITE_NAME=db.sqlite3
+EMAIL_HOST=127.0.0.1
 ```
+
+Start only Mailpit when Django runs from the virtual environment:
+
+```bash
+docker compose --profile mailpit up -d mailpit
+```
+
+Development OTP emails appear at `http://localhost:8025/`.
 
 ## Run Locally
 
