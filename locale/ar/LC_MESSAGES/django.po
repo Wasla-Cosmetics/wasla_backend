@@ -392,3 +392,138 @@ msgstr "المستخدم"
 
 msgid "users"
 msgstr "المستخدمون"
+
+msgid "Account"
+msgstr "الحساب"
+
+msgid "Additional product image"
+msgstr "صورة إضافية للمنتج"
+
+msgid "Additional product images"
+msgstr "صور إضافية للمنتج"
+
+msgid "Administration"
+msgstr "الإدارة"
+
+msgid "Advertisements"
+msgstr "الإعلانات"
+
+msgid "Available product units"
+msgstr "وحدات المنتجات المتاحة"
+
+msgid "Available quantity"
+msgstr "الكمية المتاحة"
+
+msgid "Branches"
+msgstr "الفروع"
+
+msgid "Brands"
+msgstr "العلامات التجارية"
+
+msgid "Catalog"
+msgstr "الكتالوج"
+
+msgid "Categories"
+msgstr "التصنيفات"
+
+msgid "Category"
+msgstr "التصنيف"
+
+msgid "Compare-at price"
+msgstr "السعر قبل الخصم"
+
+msgid "Compare-at price must be greater than the selling price."
+msgstr "يجب أن يكون السعر قبل الخصم أكبر من سعر البيع."
+
+msgid "Create user"
+msgstr "إنشاء مستخدم"
+
+msgid "Customers"
+msgstr "العملاء"
+
+msgid "Full description"
+msgstr "الوصف الكامل"
+
+msgid "Guest Sessions"
+msgstr "جلسات الزوار"
+
+msgid "Image"
+msgstr "الصورة"
+
+msgid "Inventory Units"
+msgstr "وحدات المخزون"
+
+msgid "Low Stock"
+msgstr "مخزون منخفض"
+
+msgid "Optional. It must be greater than the selling price."
+msgstr "اختياري. يجب أن يكون أكبر من سعر البيع."
+
+msgid "Overview"
+msgstr "نظرة عامة"
+
+msgid "Personal information"
+msgstr "المعلومات الشخصية"
+
+msgid "Primary product image"
+msgstr "صورة المنتج الرئيسية"
+
+msgid "Product Reviews"
+msgstr "تقييمات المنتجات"
+
+msgid "Product name"
+msgstr "اسم المنتج"
+
+msgid "Products"
+msgstr "المنتجات"
+
+msgid "Products in the catalog"
+msgstr "المنتجات الموجودة في الكتالوج"
+
+msgid "Products with 1–5 units"
+msgstr "المنتجات التي تحتوي على 1–5 وحدات"
+
+msgid "Registered Customers"
+msgstr "العملاء المسجلون"
+
+msgid "Registered customer accounts"
+msgstr "حسابات العملاء المسجلين"
+
+msgid "Reward points"
+msgstr "نقاط المكافآت"
+
+msgid "Security information"
+msgstr "معلومات الأمان"
+
+msgid "Select a category"
+msgstr "اختر تصنيفًا"
+
+msgid "Seller Dashboard"
+msgstr "لوحة تحكم البائع"
+
+msgid "Selling price"
+msgstr "سعر البيع"
+
+msgid "Show as best seller"
+msgstr "إظهاره كأكثر مبيعًا"
+
+msgid "Show as new"
+msgstr "إظهاره كمنتج جديد"
+
+msgid "Staff Groups"
+msgstr "مجموعات الموظفين"
+
+msgid "Use a square JPG, PNG, or WebP image for the best result."
+msgstr "استخدم صورة مربعة بصيغة JPG أو PNG أو WebP للحصول على أفضل نتيجة."
+
+msgid "Wasla Marketplace"
+msgstr "سوق وصلة"
+
+msgid "Wasla Seller Dashboard"
+msgstr "لوحة تحكم بائع وصلة"
+
+msgid "اسم المنتج"
+msgstr "اسم المنتج"
+
+msgid "الوصف الكامل"
+msgstr "الوصف الكامل"

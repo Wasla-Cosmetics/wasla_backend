@@ -85,7 +85,12 @@ class WebhookOtpDeliveryBackendTests(SimpleTestCase):
         self.assertEqual(request.get_header("Authorization"), "Bearer secret-token")
         self.assertEqual(mocked_urlopen.call_args.kwargs["timeout"], 4)
 
-
+@override_settings(
+    REST_FRAMEWORK={
+        **settings.REST_FRAMEWORK,
+        "NUM_PROXIES": 0,
+    }
+)
 class AuthIPRateThrottleTests(SimpleTestCase):
     def test_direct_requests_ignore_untrusted_forwarded_for_header(self):
         request = APIRequestFactory().post(
