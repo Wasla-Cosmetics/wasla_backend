@@ -4,6 +4,7 @@ from os import environ as env
 from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -40,6 +41,8 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # Application definition
 BUILT_IN_APPS = [
+    "unfold",
+    "unfold.contrib.filters",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -67,6 +70,169 @@ LOCAL_APPS = [
 
 INSTALLED_APPS = MODELTRANSLATION_APPS + BUILT_IN_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
+UNFOLD = {
+    "SITE_TITLE": _("Wasla Seller Dashboard"),
+    "SITE_HEADER": _("Wasla Marketplace"),
+    "SITE_SUBHEADER": _("Seller Dashboard"),
+    "SITE_SYMBOL": "storefront",
+    "DASHBOARD_CALLBACK": "apps.core.admin_dashboard.dashboard_callback",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "SHOW_BACK_BUTTON": True,
+    "SHOW_LANGUAGES": True,
+    "BORDER_RADIUS": "10px",
+    "COLORS": {
+        "base": {
+            "50": "oklch(98.5% .002 247.839)",
+            "100": "oklch(96.7% .003 264.542)",
+            "200": "oklch(92.8% .006 264.531)",
+            "300": "oklch(87.2% .01 258.338)",
+            "400": "oklch(70.7% .022 261.325)",
+            "500": "oklch(55.1% .027 264.364)",
+            "600": "oklch(44.6% .03 256.802)",
+            "700": "oklch(37.3% .034 259.733)",
+            "800": "oklch(27.8% .033 256.848)",
+            "900": "oklch(21% .034 264.665)",
+            "950": "oklch(13% .028 261.692)",
+        },
+        "primary": {
+            "50": "oklch(98.4% .014 180.72)",
+            "100": "oklch(95.3% .051 180.801)",
+            "200": "oklch(91% .096 180.426)",
+            "300": "oklch(85.5% .138 181.071)",
+            "400": "oklch(77.7% .152 181.912)",
+            "500": "oklch(70.4% .14 182.503)",
+            "600": "oklch(60% .118 184.704)",
+            "700": "oklch(51.1% .096 186.391)",
+            "800": "oklch(43.7% .078 188.216)",
+            "900": "oklch(38.6% .063 188.416)",
+            "950": "oklch(27.7% .046 192.524)",
+        },
+        "font": {
+            "subtle-light": "var(--color-base-500)",
+            "subtle-dark": "var(--color-base-400)",
+            "default-light": "var(--color-base-600)",
+            "default-dark": "var(--color-base-300)",
+            "important-light": "var(--color-base-900)",
+            "important-dark": "var(--color-base-100)",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": _("Overview"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Seller Dashboard"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": _("Catalog"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Products"),
+                        "icon": "inventory_2",
+                        "link": reverse_lazy("admin:store_product_changelist"),
+                        "permission": lambda request: request.user.has_perm(
+                            "store.view_product"
+                        ),
+                    },
+                    {
+                        "title": _("Categories"),
+                        "icon": "category",
+                        "link": reverse_lazy("admin:store_category_changelist"),
+                        "permission": lambda request: request.user.has_perm(
+                            "store.view_category"
+                        ),
+                    },
+                    {
+                        "title": _("Brands"),
+                        "icon": "verified",
+                        "link": reverse_lazy("admin:store_brand_changelist"),
+                        "permission": lambda request: request.user.has_perm(
+                            "store.view_brand"
+                        ),
+                    },
+                    {
+                        "title": _("Branches"),
+                        "icon": "account_tree",
+                        "link": reverse_lazy("admin:store_branch_changelist"),
+                        "permission": lambda request: request.user.has_perm(
+                            "store.view_branch"
+                        ),
+                    },
+                    {
+                        "title": _("Advertisements"),
+                        "icon": "campaign",
+                        "link": reverse_lazy("admin:store_ad_changelist"),
+                        "permission": lambda request: request.user.has_perm(
+                            "store.view_ad"
+                        ),
+                    },
+                    {
+                        "title": _("Product Reviews"),
+                        "icon": "reviews",
+                        "link": reverse_lazy(
+                            "admin:store_productreview_changelist"
+                        ),
+                        "permission": lambda request: request.user.has_perm(
+                            "store.view_productreview"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Customers"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Registered Customers"),
+                        "icon": "group",
+                        "link": reverse_lazy(
+                            "admin:authentication_user_changelist"
+                        ),
+                        "permission": lambda request: request.user.has_perm(
+                            "authentication.view_user"
+                        ),
+                    },
+                    {
+                        "title": _("Guest Sessions"),
+                        "icon": "person_search",
+                        "link": reverse_lazy(
+                            "admin:authentication_guestuser_changelist"
+                        ),
+                        "permission": lambda request: request.user.has_perm(
+                            "authentication.view_guestuser"
+                        ),
+                    },
+                ],
+            },
+            {
+                "title": _("Administration"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("Staff Groups"),
+                        "icon": "admin_panel_settings",
+                        "link": reverse_lazy("admin:auth_group_changelist"),
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                ],
+            },
+        ],
+    },
+}
+
 BUILT_IN_MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -90,7 +256,7 @@ ROOT_URLCONF = "project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

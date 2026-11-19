@@ -1,0 +1,254 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link
+        rel="stylesheet"
+        href="{% static 'admin/css/wasla-dashboard.css' %}"
+    >
+{% endblock %}
+
+{% block content %}
+<div class="wasla-dashboard">
+
+    <section class="wasla-hero">
+        <div>
+            <span class="wasla-eyebrow">
+                {% trans "Wasla Marketplace" %}
+            </span>
+
+            <h1>{% trans "Seller Dashboard" %}</h1>
+
+            <p>
+                {% trans "Manage your catalog, inventory and customers from one place." %}
+            </p>
+        </div>
+
+        <div class="wasla-hero-actions">
+            <a
+                class="wasla-button wasla-button-secondary"
+                href="{% url 'admin:store_category_add' %}"
+            >
+                {% trans "Add Category" %}
+            </a>
+
+            <a
+                class="wasla-button wasla-button-primary"
+                href="{% url 'admin:store_product_add' %}"
+            >
+                {% trans "Add Product" %}
+            </a>
+        </div>
+    </section>
+
+    <section class="wasla-stats-grid">
+        {% for stat in seller_stats %}
+            <a
+                class="wasla-stat-card wasla-tone-{{ stat.tone }}"
+                href="{{ stat.url }}"
+            >
+                <div class="wasla-stat-heading">
+                    <span class="material-symbols-outlined">
+                        {{ stat.icon }}
+                    </span>
+
+                    <span>{{ stat.title }}</span>
+                </div>
+
+                <strong>{{ stat.value }}</strong>
+                <small>{{ stat.description }}</small>
+            </a>
+        {% endfor %}
+    </section>
+
+    <section class="wasla-section">
+        <div class="wasla-section-header">
+            <div>
+                <span class="wasla-eyebrow">
+                    {% trans "Storefront" %}
+                </span>
+                <h2>{% trans "Catalog Health" %}</h2>
+            </div>
+        </div>
+
+        <div class="wasla-health-grid">
+            <div>
+                <strong>{{ catalog_health.brands }}</strong>
+                <span>{% trans "Brands" %}</span>
+            </div>
+
+            <div>
+                <strong>{{ catalog_health.categories }}</strong>
+                <span>{% trans "Categories" %}</span>
+            </div>
+
+            <div>
+                <strong>{{ catalog_health.out_of_stock }}</strong>
+                <span>{% trans "Out of stock" %}</span>
+            </div>
+
+            <div>
+                <strong>{{ catalog_health.best_sellers }}</strong>
+                <span>{% trans "Best sellers" %}</span>
+            </div>
+
+            <div>
+                <strong>{{ catalog_health.missing_arabic }}</strong>
+                <span>{% trans "Missing Arabic content" %}</span>
+            </div>
+
+            <div>
+                <strong>{{ catalog_health.reviews }}</strong>
+                <span>{% trans "Product reviews" %}</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="wasla-panels-grid">
+        <article class="wasla-panel">
+            <div class="wasla-panel-header">
+                <div>
+                    <span class="wasla-eyebrow">
+                        {% trans "Inventory" %}
+                    </span>
+                    <h2>{% trans "Low Stock Products" %}</h2>
+                </div>
+
+                <a href="{% url 'admin:store_product_changelist' %}">
+                    {% trans "View all" %}
+                </a>
+            </div>
+
+            <div class="wasla-table-wrapper">
+                <table class="wasla-table">
+                    <thead>
+                        <tr>
+                            <th>{% trans "Product" %}</th>
+                            <th>{% trans "Category" %}</th>
+                            <th>{% trans "Stock" %}</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for product in low_stock_products %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'admin:store_product_change' product.pk %}">
+                                        {{ product.title }}
+                                    </a>
+                                </td>
+                                <td>{{ product.category.title }}</td>
+                                <td>
+                                    <span
+                                        class="{% if product.stock_quantity == 0 %}wasla-danger-badge{% else %}wasla-warning-badge{% endif %}"
+                                    >
+                                        {{ product.stock_quantity }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="wasla-empty">
+                                    {% trans "There are no low-stock products." %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <article class="wasla-panel">
+            <div class="wasla-panel-header">
+                <div>
+                    <span class="wasla-eyebrow">
+                        {% trans "Catalog" %}
+                    </span>
+                    <h2>{% trans "Recently Added Products" %}</h2>
+                </div>
+
+                <a href="{% url 'admin:store_product_changelist' %}">
+                    {% trans "View all" %}
+                </a>
+            </div>
+
+            <div class="wasla-list">
+                {% for product in recent_products %}
+                    <a
+                        class="wasla-list-item"
+                        href="{% url 'admin:store_product_change' product.pk %}"
+                    >
+                        <div>
+                            <strong>{{ product.title }}</strong>
+                            <span>{{ product.category.title }}</span>
+                        </div>
+
+                        <span>{{ product.default_price }}</span>
+                    </a>
+                {% empty %}
+                    <div class="wasla-empty">
+                        {% trans "No products have been added yet." %}
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="wasla-panel">
+        <div class="wasla-panel-header">
+            <div>
+                <span class="wasla-eyebrow">
+                    {% trans "Customer Feedback" %}
+                </span>
+                <h2>{% trans "Recent Product Reviews" %}</h2>
+            </div>
+
+            <a href="{% url 'admin:store_productreview_changelist' %}">
+                {% trans "View all" %}
+            </a>
+        </div>
+
+        <div class="wasla-table-wrapper">
+            <table class="wasla-table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Product" %}</th>
+                        <th>{% trans "Customer" %}</th>
+                        <th>{% trans "Rating" %}</th>
+                        <th>{% trans "Review" %}</th>
+                        <th>{% trans "Date" %}</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for review in recent_reviews %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'admin:store_productreview_change' review.pk %}">
+                                    {{ review.product.title }}
+                                </a>
+                            </td>
+                            <td>{{ review.user.full_name|default:review.user.phone }}</td>
+                            <td>
+                                <span class="wasla-rating">
+                                    ★ {{ review.rating }}/5
+                                </span>
+                            </td>
+                            <td>{{ review.description|truncatechars:60 }}</td>
+                            <td>{{ review.created_at|date:"d M Y" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="wasla-empty">
+                                {% trans "There are no product reviews yet." %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends "admin/change_form.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+
+    <link
+        rel="stylesheet"
+        href="{% static 'admin/css/wasla-product-form.css' %}"
+    >
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+
+    <script
+        defer
+        src="{% static 'admin/js/wasla-product-form.js' %}"
+    ></script>
+{% endblock %}
+
+{% block form_top %}
+    <section class="wasla-product-intro">
+        <div>
+            <span class="wasla-product-eyebrow">
+                {% trans "Product workspace" %}
+            </span>
+
+            <h2>
+                {% if add %}
+                    {% trans "Add a new product" %}
+                {% else %}
+                    {% trans "Edit product" %}
+                {% endif %}
+            </h2>
+
+            <p>
+                {% trans "Enter customer-facing content in both languages, then complete the shared product data once." %}
+            </p>
+        </div>
+
+        {% if original %}
+            <div class="wasla-product-meta">
+                <span>{% trans "Last updated" %}</span>
+
+                <strong>
+                    {{ original.updated_at|date:"d M Y, H:i" }}
+                </strong>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
+
+{% block field_sets %}
+    <div class="wasla-product-layout">
+
+        <!-- Main column -->
+        <main class="wasla-product-main">
+
+            <!-- Bilingual content -->
+            <section class="wasla-form-card wasla-content-card">
+                <header class="wasla-card-header">
+                    <div class="wasla-card-icon">
+                        <span class="material-symbols-outlined">
+                            description
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3>{% trans "Product content" %}</h3>
+
+                        <p>
+                            {% trans "This information is shown to customers in their selected language." %}
+                        </p>
+                    </div>
+                </header>
+
+                <!-- Mobile language buttons -->
+                <div
+                    class="wasla-language-tabs"
+                    role="tablist"
+                    aria-label="{% trans 'Product language' %}"
+                >
+                    <button
+                        type="button"
+                        class="is-active"
+                        data-language-tab="en"
+                        role="tab"
+                        aria-selected="true"
+                    >
+                        EN&nbsp; {% trans "English" %}
+                    </button>
+
+                    <button
+                        type="button"
+                        data-language-tab="ar"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        AR&nbsp; {% trans "Arabic" %}
+                    </button>
+                </div>
+
+                <div class="wasla-language-grid">
+
+                    <!-- English content -->
+                    <section
+                        class="wasla-language-panel"
+                        data-language-panel="en"
+                        lang="en"
+                        dir="ltr"
+                    >
+                        <div class="wasla-language-heading">
+                            <div>
+                                <span class="wasla-language-code">
+                                    EN
+                                </span>
+
+                                <strong>{% trans "English" %}</strong>
+                            </div>
+
+                            <span>LTR</span>
+                        </div>
+
+                        {% include "admin/store/product/includes/field.html" with field=adminform.form.title_en %}
+
+                        <div
+                            class="wasla-character-count"
+                            data-counter-for="id_title_en"
+                            data-counter-max="255"
+                        >
+                            0 / 255
+                        </div>
+
+                        {% include "admin/store/product/includes/field.html" with field=adminform.form.description_en %}
+
+                        <div
+                            class="wasla-character-count"
+                            data-counter-for="id_description_en"
+                            data-counter-max="2000"
+                        >
+                            0 / 2000
+                        </div>
+                    </section>
+
+                    <!-- Arabic content -->
+                    <section
+                        class="wasla-language-panel wasla-language-panel-ar"
+                        data-language-panel="ar"
+                        lang="ar"
+                        dir="rtl"
+                    >
+                        <div class="wasla-language-heading">
+                            <div>
+                                <span class="wasla-language-code">
+                                    AR
+                                </span>
+
+                                <strong>{% trans "Arabic" %}</strong>
+                            </div>
+
+                            <span>RTL</span>
+                        </div>
+
+                        {% include "admin/store/product/includes/field.html" with field=adminform.form.title_ar %}
+
+                        <div
+                            class="wasla-character-count"
+                            data-counter-for="id_title_ar"
+                            data-counter-max="255"
+                        >
+                            0 / 255
+                        </div>
+
+                        {% include "admin/store/product/includes/field.html" with field=adminform.form.description_ar %}
+
+                        <div
+                            class="wasla-character-count"
+                            data-counter-for="id_description_ar"
+                            data-counter-max="2000"
+                        >
+                            0 / 2000
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <!-- Primary image -->
+            <section class="wasla-form-card">
+                <header class="wasla-card-header">
+                    <div class="wasla-card-icon">
+                        <span class="material-symbols-outlined">
+                            image
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3>{% trans "Primary media" %}</h3>
+
+                        <p>
+                            {% trans "The primary image appears first in listings and product details." %}
+                        </p>
+                    </div>
+                </header>
+
+                <div class="wasla-primary-image">
+                    {% include "admin/store/product/includes/field.html" with field=adminform.form.image %}
+                </div>
+            </section>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="wasla-product-sidebar">
+
+            <!-- Category -->
+            <section class="wasla-form-card">
+                <header class="wasla-card-header wasla-card-header-compact">
+                    <div class="wasla-card-icon">
+                        <span class="material-symbols-outlined">
+                            folder_open
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3>{% trans "Organization" %}</h3>
+                        <p>{% trans "Help customers find the product." %}</p>
+                    </div>
+                </header>
+
+                {% include "admin/store/product/includes/field.html" with field=adminform.form.category %}
+            </section>
+
+            <!-- Pricing -->
+            <section class="wasla-form-card">
+                <header class="wasla-card-header wasla-card-header-compact">
+                    <div class="wasla-card-icon">
+                        <span class="material-symbols-outlined">
+                            sell
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3>{% trans "Pricing" %}</h3>
+                        <p>{% trans "Set customer-facing prices in EGP." %}</p>
+                    </div>
+                </header>
+
+                <div class="wasla-price-grid">
+                    <div class="wasla-money-field">
+                        {% include "admin/store/product/includes/field.html" with field=adminform.form.default_price %}
+
+                        <span class="wasla-money-suffix">
+                            {% trans "EGP" %}
+                        </span>
+                    </div>
+
+                    <div class="wasla-money-field">
+                        {% include "admin/store/product/includes/field.html" with field=adminform.form.compare_at_price %}
+
+                        <span class="wasla-money-suffix">
+                            {% trans "EGP" %}
+                        </span>
+                    </div>
+                </div>
+
+                {% if original.compare_at_price %}
+                    <div class="wasla-discount-preview">
+                        <span>{% trans "Current discount" %}</span>
+                        <strong>{{ original.discount_percentage }}%</strong>
+                    </div>
+                {% endif %}
+            </section>
+
+            <!-- Inventory -->
+            <section class="wasla-form-card">
+                <header class="wasla-card-header wasla-card-header-compact">
+                    <div class="wasla-card-icon">
+                        <span class="material-symbols-outlined">
+                            inventory_2
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3>{% trans "Inventory" %}</h3>
+
+                        <p>
+                            {% trans "Control available units and rewards." %}
+                        </p>
+                    </div>
+                </header>
+
+                <div class="wasla-two-fields">
+                    {% include "admin/store/product/includes/field.html" with field=adminform.form.stock_quantity %}
+
+                    {% include "admin/store/product/includes/field.html" with field=adminform.form.reward_points %}
+                </div>
+            </section>
+
+            <!-- Merchandising -->
+            <section class="wasla-form-card">
+                <header class="wasla-card-header wasla-card-header-compact">
+                    <div class="wasla-card-icon">
+                        <span class="material-symbols-outlined">
+                            campaign
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3>{% trans "Merchandising" %}</h3>
+
+                        <p>
+                            {% trans "Choose where the product is highlighted." %}
+                        </p>
+                    </div>
+                </header>
+
+                <div class="wasla-switches">
+                    {% trans "Highlight this product in the newest-products area." as newest_description %}
+
+                    {% include "admin/store/product/includes/switch.html" with field=adminform.form.is_newest description=newest_description %}
+
+                    {% trans "Highlight this product in the best-sellers area." as bestseller_description %}
+
+                    {% include "admin/store/product/includes/switch.html" with field=adminform.form.is_best_seller description=bestseller_description %}
+                </div>
+            </section>
+        </aside>
+    </div>
+{% endblock %}
+
+{% block inline_field_sets %}
+    <section class="wasla-form-card wasla-gallery-card">
+        <header class="wasla-card-header">
+            <div class="wasla-card-icon">
+                <span class="material-symbols-outlined">
+                    photo_library
+                </span>
+            </div>
+
+            <div>
+                <h3>{% trans "Additional product images" %}</h3>
+
+                <p>
+                    {% trans "Add alternative angles, packaging, labels, and usage images." %}
+                </p>
+            </div>
+        </header>
+
+        {% for inline_admin_formset in inline_admin_formsets %}
+            {% include inline_admin_formset.opts.template %}
+        {% endfor %}
+    </section>
+{% endblock %}

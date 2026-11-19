@@ -1,0 +1,495 @@
+:root {
+    --wasla-form-teal: #00c2b3;
+    --wasla-form-teal-dark: #008f86;
+    --wasla-form-navy: #0b1628;
+    --wasla-form-border: #e2e8ec;
+    --wasla-form-muted: #65727a;
+    --wasla-form-danger: #dc2626;
+    --wasla-form-surface: #ffffff;
+}
+
+.wasla-product-intro {
+    align-items: center;
+    background: linear-gradient(120deg, #0b1628 0%, #13263e 100%);
+    border-radius: 16px;
+    color: #ffffff;
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    overflow: hidden;
+    padding: 24px 28px;
+    position: relative;
+}
+
+.wasla-product-intro::after {
+    background: var(--wasla-form-teal);
+    border-radius: 999px;
+    content: "";
+    height: 180px;
+    inset-inline-end: -68px;
+    opacity: 0.13;
+    position: absolute;
+    top: -92px;
+    width: 180px;
+}
+
+.wasla-product-eyebrow {
+    color: #4ee2d6;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.wasla-product-intro h2 {
+    color: #ffffff;
+    font-size: 24px;
+    font-weight: 750;
+    line-height: 1.2;
+    margin: 6px 0;
+}
+
+.wasla-product-intro p {
+    color: #cbd5e1;
+    font-size: 13px;
+    margin: 0;
+}
+
+.wasla-product-meta {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 3px;
+    position: relative;
+    text-align: end;
+    z-index: 1;
+}
+
+.wasla-product-meta span {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.wasla-product-meta strong {
+    font-size: 13px;
+}
+
+.wasla-product-layout {
+    align-items: start;
+    display: grid;
+    gap: 20px;
+    grid-template-columns:
+        minmax(0, 2fr)
+        minmax(300px, 0.82fr);
+}
+
+.wasla-product-main,
+.wasla-product-sidebar {
+    display: grid;
+    gap: 20px;
+    min-width: 0;
+}
+
+.wasla-product-sidebar {
+    position: sticky;
+    top: 24px;
+}
+
+.wasla-form-card {
+    background: var(--wasla-form-surface);
+    border: 1px solid var(--wasla-form-border);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(11, 22, 40, 0.035);
+    min-width: 0;
+    padding: 20px;
+}
+
+.wasla-card-header {
+    align-items: flex-start;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.wasla-card-header-compact {
+    margin-bottom: 18px;
+}
+
+.wasla-card-icon {
+    align-items: center;
+    background: #e9fbf9;
+    border-radius: 9px;
+    color: var(--wasla-form-teal-dark);
+    display: flex;
+    flex: 0 0 34px;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.wasla-card-icon .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.wasla-card-header h3 {
+    color: var(--wasla-form-navy);
+    font-size: 16px;
+    font-weight: 750;
+    line-height: 1.25;
+    margin: 0 0 4px;
+}
+
+.wasla-card-header p {
+    color: var(--wasla-form-muted);
+    font-size: 12px;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.wasla-language-tabs {
+    display: none;
+}
+
+.wasla-language-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wasla-language-panel {
+    background:
+        linear-gradient(
+            180deg,
+            #f1fbfa 0,
+            #ffffff 78px
+        );
+    border: 1px solid #dcebea;
+    border-radius: 12px;
+    min-width: 0;
+    padding: 16px;
+}
+
+.wasla-language-panel-ar {
+    background:
+        linear-gradient(
+            180deg,
+            #fff9f0 0,
+            #ffffff 78px
+        );
+    border-color: #eee5d8;
+}
+
+.wasla-language-heading {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.wasla-language-heading > div {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.wasla-language-heading strong {
+    color: var(--wasla-form-navy);
+    font-size: 13px;
+}
+
+.wasla-language-heading > span {
+    background: #ffffff;
+    border: 1px solid var(--wasla-form-border);
+    border-radius: 999px;
+    color: var(--wasla-form-muted);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 7px;
+}
+
+.wasla-language-code {
+    align-items: center;
+    background: var(--wasla-form-teal);
+    border-radius: 7px;
+    color: #062e2b;
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 900;
+    height: 24px;
+    justify-content: center;
+    width: 28px;
+}
+
+.wasla-product-field {
+    margin-bottom: 17px;
+    min-width: 0;
+    position: relative;
+}
+
+.wasla-product-field:last-child {
+    margin-bottom: 0;
+}
+
+.wasla-product-field > label {
+    color: var(--wasla-form-navy);
+    display: block;
+    font-size: 12px;
+    font-weight: 750;
+    margin-bottom: 7px;
+}
+
+.wasla-required {
+    color: var(--wasla-form-danger);
+}
+
+.wasla-product-field input:not([type="checkbox"]),
+.wasla-product-field textarea,
+.wasla-product-field select,
+.wasla-product-field .related-widget-wrapper {
+    max-width: none !important;
+    width: 100% !important;
+}
+
+.wasla-product-field textarea {
+    min-height: 152px;
+    resize: vertical;
+}
+
+.wasla-product-field.has-errors input,
+.wasla-product-field.has-errors textarea,
+.wasla-product-field.has-errors select {
+    border-color: var(--wasla-form-danger) !important;
+}
+
+.wasla-field-help,
+.wasla-field-error {
+    font-size: 11px;
+    line-height: 1.45;
+    margin: 6px 0 0;
+}
+
+.wasla-field-help {
+    color: var(--wasla-form-muted);
+}
+
+.wasla-field-error {
+    align-items: center;
+    color: var(--wasla-form-danger);
+    display: flex;
+    gap: 4px;
+}
+
+.wasla-field-error .material-symbols-outlined {
+    font-size: 15px;
+}
+
+.wasla-character-count {
+    color: var(--wasla-form-muted);
+    font-size: 10px;
+    margin: -12px 0 17px;
+    text-align: end;
+}
+
+.wasla-character-count.is-near-limit {
+    color: #c2410c;
+    font-weight: 700;
+}
+
+.wasla-price-grid,
+.wasla-two-fields {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wasla-money-field {
+    min-width: 0;
+    position: relative;
+}
+
+.wasla-money-field input {
+    padding-inline-end: 48px !important;
+}
+
+.wasla-money-suffix {
+    bottom: 29px;
+    color: var(--wasla-form-muted);
+    font-size: 10px;
+    font-weight: 800;
+    inset-inline-end: 10px;
+    pointer-events: none;
+    position: absolute;
+}
+
+.wasla-discount-preview {
+    align-items: center;
+    background: #ecfdf5;
+    border-radius: 9px;
+    color: #047857;
+    display: flex;
+    font-size: 11px;
+    justify-content: space-between;
+    padding: 10px 12px;
+}
+
+.wasla-switches {
+    display: grid;
+    gap: 12px;
+}
+
+.wasla-switch-field {
+    align-items: center;
+    border: 1px solid var(--wasla-form-border);
+    border-radius: 10px;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    padding: 12px;
+}
+
+.wasla-switch-field label {
+    color: var(--wasla-form-navy);
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.wasla-switch-field p {
+    color: var(--wasla-form-muted);
+    font-size: 10px;
+    line-height: 1.4;
+    margin: 3px 0 0;
+}
+
+.wasla-primary-image .wasla-product-field {
+    margin-bottom: 0;
+}
+
+.wasla-gallery-card {
+    margin-top: 20px;
+}
+
+.wasla-gallery-card .tabular.inline-related fieldset {
+    border: 0;
+    padding: 0;
+}
+
+.wasla-gallery-card table {
+    border: 1px solid var(--wasla-form-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Dark mode */
+
+.dark .wasla-form-card,
+.dark .wasla-language-panel,
+.dark .wasla-language-panel-ar {
+    --wasla-form-surface: #111827;
+    --wasla-form-border: #2b3749;
+    --wasla-form-navy: #f8fafc;
+    --wasla-form-muted: #a7b2c1;
+
+    background: #111827;
+}
+
+.dark .wasla-card-icon {
+    background: rgba(0, 194, 179, 0.12);
+}
+
+.dark .wasla-switch-field,
+.dark .wasla-language-heading > span {
+    background: #111827;
+}
+
+/* Medium screens */
+
+@media (max-width: 1180px) {
+    .wasla-product-layout {
+        grid-template-columns:
+            minmax(0, 1.55fr)
+            minmax(280px, 0.85fr);
+    }
+
+    .wasla-language-grid,
+    .wasla-price-grid,
+    .wasla-two-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tablets */
+
+@media (max-width: 900px) {
+    .wasla-product-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .wasla-product-sidebar {
+        position: static;
+    }
+
+    .wasla-price-grid,
+    .wasla-two-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+    .wasla-product-intro {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .wasla-product-meta {
+        text-align: start;
+    }
+
+    .wasla-form-card {
+        border-radius: 12px;
+        padding: 15px;
+    }
+
+    .wasla-language-tabs {
+        background: #eef3f4;
+        border-radius: 10px;
+        display: grid;
+        gap: 4px;
+        grid-template-columns: repeat(2, 1fr);
+        margin-bottom: 14px;
+        padding: 4px;
+    }
+
+    .wasla-language-tabs button {
+        border-radius: 7px;
+        color: var(--wasla-form-muted);
+        font-size: 12px;
+        font-weight: 750;
+        padding: 9px;
+    }
+
+    .wasla-language-tabs button.is-active {
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(11, 22, 40, 0.09);
+        color: var(--wasla-form-navy);
+    }
+
+    .wasla-language-grid {
+        display: block;
+    }
+
+    .wasla-language-panel {
+        display: none;
+    }
+
+    .wasla-language-panel.is-active {
+        display: block;
+    }
+
+    .wasla-price-grid,
+    .wasla-two-fields {
+        grid-template-columns: 1fr;
+    }
+}   

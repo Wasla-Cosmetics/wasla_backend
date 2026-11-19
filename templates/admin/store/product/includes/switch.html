@@ -1,0 +1,19 @@
+<div class="wasla-switch-field{% if field.errors %} has-errors{% endif %}">
+    <div>
+        <label for="{{ field.id_for_label }}">
+            {{ field.label }}
+        </label>
+
+        {% if description %}
+            <p>{{ description }}</p>
+        {% endif %}
+    </div>
+
+    {{ field }}
+
+    {% for error in field.errors %}
+        <p class="wasla-field-error">
+            {{ error }}
+        </p>
+    {% endfor %}
+</div>

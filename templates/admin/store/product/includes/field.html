@@ -1,0 +1,30 @@
+<div class="wasla-product-field{% if field.errors %} has-errors{% endif %}">
+    <label for="{{ field.id_for_label }}">
+        {{ field.label }}
+
+        {% if field.field.required %}
+            <span class="wasla-required">*</span>
+        {% endif %}
+    </label>
+
+    {{ field }}
+
+    {% if field.help_text %}
+        <p class="wasla-field-help">
+            {{ field.help_text }}
+        </p>
+    {% endif %}
+
+    {% for error in field.errors %}
+        <p class="wasla-field-error">
+            <span
+                class="material-symbols-outlined"
+                aria-hidden="true"
+            >
+                error
+            </span>
+
+            {{ error }}
+        </p>
+    {% endfor %}
+</div>
