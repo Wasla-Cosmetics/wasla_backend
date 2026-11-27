@@ -114,6 +114,12 @@ jobs:
     name: Python code quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      ENV: local
+      DATABASE_TYPE: sqlite3
+      SQLITE_NAME: /tmp/wasla-mypy.sqlite3
+      SECRET_KEY: mypy-only-secret-key
+      DEBUG: "False"
 
     steps:
       - name: Checkout repository
