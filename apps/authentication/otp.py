@@ -1,7 +1,8 @@
-from datetime import timedelta
 import json
+from datetime import timedelta
 from secrets import randbelow
 from smtplib import SMTPException
+from typing import Protocol, cast
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 
@@ -13,6 +14,8 @@ from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import APIException
 
+from apps.authentication.models import User
+
 REGISTER_OTP = "register"
 RESET_PASSWORD_OTP = "reset-password"
 
@@ -23,13 +26,17 @@ class OtpDeliveryUnavailable(APIException):
     default_code = "otp_delivery_unavailable"
 
 
+class OtpDeliveryBackend(Protocol):
+    def send(self, user: User, otp: str) -> None: ...
+
+
 class UnconfiguredOtpDeliveryBackend:
-    def send(self, user, otp):
+    def send(self, user: User, otp: str) -> None:
         raise OtpDeliveryUnavailable()
 
 
 class EmailOtpDeliveryBackend:
-    def send(self, user, otp):
+    def send(self, user: User, otp: str) -> None:
         try:
             sent_count = send_mail(
                 _("Your Wasla verification code"),
@@ -48,7 +55,7 @@ class EmailOtpDeliveryBackend:
 
 
 class WebhookOtpDeliveryBackend:
-    def send(self, user, otp):
+    def send(self, user: User, otp: str) -> None:
         payload = json.dumps({"phone": user.phone, "otp": otp}).encode("utf-8")
         request = Request(
             settings.AUTH_OTP_WEBHOOK_URL,
@@ -71,23 +78,23 @@ class WebhookOtpDeliveryBackend:
             raise OtpDeliveryUnavailable() from exc
 
 
-def generate_otp():
+def generate_otp() -> str:
     return f"{randbelow(1_000_000):06d}"
 
 
-def get_delivery_backend():
+def get_delivery_backend() -> OtpDeliveryBackend:
     backend_class = import_string(settings.AUTH_OTP_DELIVERY_BACKEND)
-    return backend_class()
+    return cast(OtpDeliveryBackend, backend_class())
 
 
-def clear_otp(user):
+def clear_otp(user: User) -> None:
     user.otp = None
     user.otp_purpose = None
     user.otp_expires_at = None
     user.save(update_fields=["otp", "otp_purpose", "otp_expires_at"])
 
 
-def issue_otp(user, purpose):
+def issue_otp(user: User, purpose: str) -> None:
     otp = generate_otp()
     user.otp = make_password(otp)
     user.otp_purpose = purpose
@@ -103,7 +110,7 @@ def issue_otp(user, purpose):
         raise
 
 
-def verify_otp(user, otp, purpose):
+def verify_otp(user: User, otp: str, purpose: str) -> bool:
     now = timezone.now()
     if (
         not user.otp

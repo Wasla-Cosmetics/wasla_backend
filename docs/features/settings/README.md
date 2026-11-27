@@ -113,13 +113,19 @@ Staging and production settings:
 - Enable secure cookie settings.
 - Redirect HTTP to HTTPS by default.
 - Support `CSRF_TRUSTED_ORIGINS`.
-- Apply HSTS defaults of one day in staging and one year in production.
+- Apply a one-year HSTS default in staging and production.
+- Include all subdomains in HSTS and advertise preload eligibility by default.
 - Require an explicit trusted reverse-proxy count so client IP throttles ignore
   spoofed `X-Forwarded-For` prefixes.
 
+Only enable the deployed HSTS defaults after confirming that the parent domain
+and every relevant subdomain will remain HTTPS-only permanently. The deployment
+workflow records both settings explicitly in each generated environment file.
+
 The included webhook delivery backend sends `{ "phone": ..., "otp": ... }` to
-an HTTPS provider endpoint using the configured bearer token. Staging defaults
-HSTS to one day; production defaults it to one year.
+an HTTPS provider endpoint using the configured bearer token. Staging and
+production both default HSTS to one year so the preload directive remains
+eligible.
 
 Deployed environments accept only the provided email and webhook OTP backends.
 The email backend requires Django's SMTP backend, SMTP credentials, and exactly

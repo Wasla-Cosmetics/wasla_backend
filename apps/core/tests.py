@@ -1,12 +1,14 @@
 import ast
-from datetime import timedelta
-from io import StringIO
 import os
-from pathlib import Path
+import re
 import subprocess
 import sys
+from datetime import timedelta
+from io import StringIO
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlsplit
 
 from django.core.management import CommandError, call_command
 from django.db import OperationalError
@@ -14,11 +16,12 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
 
 from apps.authentication.models import GuestUser, User
+from apps.core.admin_dashboard import LOW_STOCK_THRESHOLD, dashboard_callback
 from apps.core.signals import ensure_default_media
 from apps.store.models import (
     Ad,
-    Brand,
     Branch,
+    Brand,
     Category,
     Product,
     ProductImage,
@@ -116,8 +119,9 @@ class SeedDataCommandTests(TestCase):
 
     def test_refuses_to_seed_staging_or_production(self):
         for environment in ("staging", "production"):
-            with self.subTest(environment=environment), patch.dict(
-                os.environ, {"ENV": environment}
+            with (
+                self.subTest(environment=environment),
+                patch.dict(os.environ, {"ENV": environment}),
             ):
                 with self.assertRaisesMessage(
                     CommandError,
@@ -145,8 +149,9 @@ class SeedDataCommandTests(TestCase):
 
 class DefaultMediaTests(SimpleTestCase):
     def test_default_media_is_initialized_when_missing(self):
-        with TemporaryDirectory() as media_root, override_settings(
-            MEDIA_ROOT=media_root
+        with (
+            TemporaryDirectory() as media_root,
+            override_settings(MEDIA_ROOT=media_root),
         ):
             ensure_default_media()
 
@@ -156,8 +161,9 @@ class DefaultMediaTests(SimpleTestCase):
             self.assertEqual(installed_image.read_bytes(), source_image.read_bytes())
 
     def test_existing_default_media_is_not_overwritten(self):
-        with TemporaryDirectory() as media_root, override_settings(
-            MEDIA_ROOT=media_root
+        with (
+            TemporaryDirectory() as media_root,
+            override_settings(MEDIA_ROOT=media_root),
         ):
             installed_image = Path(media_root) / "default.jpeg"
             installed_image.write_bytes(b"custom image")
@@ -176,6 +182,22 @@ class HealthCheckTests(TestCase):
             response = self.client.get("/health/")
 
         self.assertEqual(response.status_code, 503)
+
+
+class AdminDashboardTests(TestCase):
+    def test_low_stock_link_matches_the_displayed_quantity_range(self):
+        context = dashboard_callback(None, {})
+        low_stock_stat = next(
+            stat for stat in context["seller_stats"] if stat["icon"] == "warning"
+        )
+
+        query = parse_qs(urlsplit(low_stock_stat["url"]).query)
+
+        self.assertEqual(query["stock_quantity__gt"], ["0"])
+        self.assertEqual(
+            query["stock_quantity__lte"],
+            [str(LOW_STOCK_THRESHOLD)],
+        )
 
 
 class DeploymentConfigurationTests(SimpleTestCase):
@@ -214,7 +236,7 @@ class DeploymentConfigurationTests(SimpleTestCase):
 
 class SettingsSelectionTests(SimpleTestCase):
     @staticmethod
-    def import_settings(**overrides):
+    def import_settings(script="import project.settings", **overrides):
         project_root = Path(__file__).resolve().parents[2]
         environment = {
             **os.environ,
@@ -223,7 +245,7 @@ class SettingsSelectionTests(SimpleTestCase):
             **overrides,
         }
         return subprocess.run(
-            [sys.executable, "-c", "import project.settings"],
+            [sys.executable, "-c", script],
             cwd=project_root,
             env=environment,
             capture_output=True,
@@ -236,6 +258,31 @@ class SettingsSelectionTests(SimpleTestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("ENV must be one of", result.stderr)
+
+    def test_deployed_environments_enable_preload_eligible_hsts(self):
+        for environment in ("staging", "production"):
+            with self.subTest(environment=environment):
+                result = self.import_settings(
+                    script=(
+                        "from django.conf import settings; "
+                        "assert settings.SECURE_HSTS_SECONDS >= 31536000; "
+                        "assert settings.SECURE_HSTS_INCLUDE_SUBDOMAINS is True; "
+                        "assert settings.SECURE_HSTS_PRELOAD is True"
+                    ),
+                    ENV=environment,
+                    SECRET_KEY=(
+                        "production-secret-key-with-more-than-fifty-characters-12345"
+                    ),
+                    ALLOWED_HOSTS="api.example.com",
+                    TRUSTED_PROXY_COUNT="1",
+                    AUTH_OTP_DELIVERY_BACKEND=(
+                        "apps.authentication.otp.WebhookOtpDeliveryBackend"
+                    ),
+                    AUTH_OTP_WEBHOOK_URL="https://sms.example.com/otp",
+                    AUTH_OTP_WEBHOOK_TOKEN="test-token",
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_deployed_email_otp_requires_real_smtp_backend(self):
         result = self.import_settings(
@@ -312,7 +359,7 @@ class SettingsSelectionTests(SimpleTestCase):
 
 
 class ArabicCatalogTests(SimpleTestCase):
-    def test_every_python_message_has_an_arabic_translation(self):
+    def test_every_project_message_has_an_arabic_translation(self):
         project_root = Path(__file__).resolve().parents[2]
         source_messages = set()
 
@@ -329,6 +376,16 @@ class ArabicCatalogTests(SimpleTestCase):
                         and isinstance(node.args[0].value, str)
                     ):
                         source_messages.add(node.args[0].value)
+
+        translation_tag = re.compile(
+            r"""{%\s*trans\s+(?P<message>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')"""
+        )
+        for path in (project_root / "templates").rglob("*.html"):
+            template = path.read_text(encoding="utf-8")
+            source_messages.update(
+                ast.literal_eval(match.group("message"))
+                for match in translation_tag.finditer(template)
+            )
 
         catalog = self._read_catalog(
             project_root / "locale" / "ar" / "LC_MESSAGES" / "django.po"

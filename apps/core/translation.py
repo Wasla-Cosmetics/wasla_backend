@@ -2,9 +2,9 @@ from modeltranslation import settings as modeltranslation_settings
 from modeltranslation.utils import build_localized_fieldname
 
 
-def get_localized_field_names(*field_paths):
+def get_localized_field_names(*field_paths: str) -> tuple[str, ...]:
     """Return concrete translated field names, including related field paths."""
-    localized_fields = []
+    localized_fields: list[str] = []
 
     for field_path in field_paths:
         *relations, field_name = field_path.split("__")

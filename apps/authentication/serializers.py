@@ -1,3 +1,4 @@
+from typing import Any, cast
 from uuid import uuid4
 
 from django.contrib.auth import password_validation
@@ -6,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.request import Request
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -20,7 +22,7 @@ from apps.authentication.tokens import (
 
 
 class VersionedTokenRefreshSerializer(TokenRefreshSerializer):
-    def validate(self, attrs):
+    def validate(self, attrs: Any) -> dict[str, Any]:
         refresh = self.token_class(attrs["refresh"])
         user_id = refresh.get("user_id")
         user = User.objects.filter(pk=user_id, is_active=True).first()
@@ -36,7 +38,7 @@ class LoginSerializer(serializers.Serializer):
     phone = serializers.CharField()
     password = serializers.CharField(write_only=True, trim_whitespace=False)
 
-    def validate(self, data):
+    def validate(self, data: Any) -> dict[str, Any]:
         phone = data.get("phone")
         password = data.get("password")
 
@@ -44,7 +46,7 @@ class LoginSerializer(serializers.Serializer):
             user = User.objects.get(phone=phone)
         except User.DoesNotExist:
             User().set_password(password)
-            raise serializers.ValidationError(_("Invalid credentials."))
+            raise serializers.ValidationError(_("Invalid credentials.")) from None
 
         if not user.check_password(password):
             raise serializers.ValidationError(_("Invalid credentials."))
@@ -63,7 +65,7 @@ class VerifyOtpSerializer(serializers.Serializer):
     otp = serializers.CharField(trim_whitespace=True)
     action = serializers.ChoiceField(choices=["register", "reset-password"])
 
-    def validate(self, data):
+    def validate(self, data: Any) -> dict[str, Any]:
         phone = data.get("phone")
         otp = data.get("otp")
         action = data.get("action")
@@ -89,7 +91,7 @@ class ResetPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, trim_whitespace=False)
     confirm_password = serializers.CharField(write_only=True, trim_whitespace=False)
 
-    def validate(self, data):
+    def validate(self, data: Any) -> dict[str, Any]:
         password = data.get("password")
         confirm_password = data.get("confirm_password")
         user = get_password_reset_user(data.get("reset_token"))
@@ -105,12 +107,12 @@ class ResetPasswordSerializer(serializers.Serializer):
         try:
             password_validation.validate_password(password, user)
         except DjangoValidationError as exc:
-            raise serializers.ValidationError({"password": list(exc.messages)})
+            raise serializers.ValidationError({"password": list(exc.messages)}) from exc
 
         data["user"] = user
         return data
 
-    def save(self):
+    def save(self, **kwargs: Any) -> User:
         user = self.validated_data["user"]
         password = self.validated_data["password"]
         user.set_password(password)
@@ -136,7 +138,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True, trim_whitespace=False)
     confirm_password = serializers.CharField(write_only=True, trim_whitespace=False)
 
-    def validate(self, data):
+    def validate(self, data: Any) -> dict[str, Any]:
         old_password = data.get("old_password")
         new_password = data.get("new_password")
         confirm_password = data.get("confirm_password")
@@ -144,7 +146,8 @@ class ChangePasswordSerializer(serializers.Serializer):
         if new_password != confirm_password:
             raise serializers.ValidationError({"password": _("Passwords do not match")})
 
-        user = self.context.get("request").user
+        request = cast(Request, self.context.get("request"))
+        user = cast(User, request.user)
 
         if not user.check_password(old_password):
             raise serializers.ValidationError(
@@ -154,12 +157,12 @@ class ChangePasswordSerializer(serializers.Serializer):
         try:
             password_validation.validate_password(new_password, user)
         except DjangoValidationError as exc:
-            raise serializers.ValidationError({"password": list(exc.messages)})
+            raise serializers.ValidationError({"password": list(exc.messages)}) from exc
 
         data["user"] = user
         return data
 
-    def save(self):
+    def save(self, **kwargs: Any) -> User:
         user = self.validated_data["user"]
         new_password = self.validated_data["new_password"]
         user.set_password(new_password)
@@ -171,11 +174,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField(write_only=True, trim_whitespace=False)
 
-    def validate_refresh(self, value):
+    def validate_refresh(self, value: str) -> str:
         try:
-            token = RefreshToken(value)
+            token = RefreshToken(cast(Any, value))
         except TokenError:
-            raise serializers.ValidationError({"refresh": _("Invalid refresh token")})
+            raise serializers.ValidationError(_("Invalid refresh token")) from None
 
         request = self.context["request"]
         user_id_claim = token.get("user_id")
@@ -184,10 +187,11 @@ class LogoutSerializer(serializers.Serializer):
                 _("Refresh token does not belong to this user.")
             )
 
-        self.context["token"] = token
+        context = cast(dict[str, Any], self.context)
+        context["token"] = token
         return value
 
-    def save(self):
+    def save(self, **kwargs: Any) -> RefreshToken:
         token = self.context["token"]
         token.blacklist()
         return token
@@ -196,17 +200,19 @@ class LogoutSerializer(serializers.Serializer):
 class DeleteAccountSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, trim_whitespace=False)
 
-    def validate(self, data):
+    def validate(self, data: Any) -> dict[str, Any]:
         password = data.get("password")
-        user = self.context.get("request").user
+        request = cast(Request, self.context.get("request"))
+        user = cast(User, request.user)
 
         if not user.check_password(password):
             raise serializers.ValidationError({"password": _("Password is incorrect")})
 
         return data
 
-    def save(self):
-        user = self.context.get("request").user
+    def save(self, **kwargs: Any) -> User:
+        request = cast(Request, self.context.get("request"))
+        user = cast(User, request.user)
         user.delete()
         return user
 
@@ -236,10 +242,10 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     @staticmethod
-    def get_cash_back(obj):
+    def get_cash_back(obj: User) -> int:
         return obj.reward_points // 1000
 
-    def validate(self, attrs):
+    def validate(self, attrs: Any) -> dict[str, Any]:
         password = attrs.get("password")
         email = attrs.get("email")
 
@@ -252,7 +258,9 @@ class UserSerializer(serializers.ModelSerializer):
             try:
                 password_validation.validate_password(password, self.instance)
             except DjangoValidationError as exc:
-                raise serializers.ValidationError({"password": list(exc.messages)})
+                raise serializers.ValidationError(
+                    {"password": list(exc.messages)}
+                ) from exc
 
         if email:
             users = User.objects.filter(email=email)
@@ -264,7 +272,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data: Any) -> User:
         phone = validated_data.get("phone")
         email = validated_data.get("email")
 
@@ -272,28 +280,27 @@ class UserSerializer(serializers.ModelSerializer):
 
         if user:
             if user.is_active:
-                raise serializers.ValidationError(
-                    {
-                        "phone": _("Phone number already exists and active"),
-                        "is_active": True,
-                    }
-                )
+                detail: dict[str, Any] = {
+                    "phone": _("Phone number already exists and active"),
+                    "is_active": True,
+                }
+                raise serializers.ValidationError(detail)
             else:
-                raise serializers.ValidationError(
-                    {
-                        "phone": _("Phone number already exists but not active"),
-                        "is_active": False,
-                    }
-                )
+                detail = {
+                    "phone": _("Phone number already exists but not active"),
+                    "is_active": False,
+                }
+                raise serializers.ValidationError(detail)
 
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError({"email": _("Email already exists")})
 
-        validated_data["phone"] = phone
-        validated_data["email"] = email
-        return User.objects.create_user(**validated_data)
+        user_data = dict(validated_data)
+        user_data["phone"] = phone
+        user_data["email"] = email
+        return User.objects.create_user(**user_data)
 
-    def update(self, instance, validated_data):
+    def update(self, instance: User, validated_data: Any) -> User:
 
         if "email" in validated_data:
             email = validated_data["email"]
@@ -319,7 +326,7 @@ class GuestUserSerializer(serializers.ModelSerializer):
             "expires_at": {"read_only": True},
         }
 
-    def create(self, validated_data):
+    def create(self, validated_data: Any) -> GuestUser:
         GuestUser.objects.filter(expires_at__lte=timezone.now()).delete()
         session_key = str(uuid4())
         return GuestUser.objects.create(session_key=session_key)

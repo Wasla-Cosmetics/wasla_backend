@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -8,7 +10,10 @@ from mptt.models import MPTTModel, TreeForeignKey
 from apps.core.models import TimeStampedModel
 
 
-class Brand(TimeStampedModel):
+class Brand(TimeStampedModel):  # type: ignore[django-manager-missing]
+    objects: ClassVar[models.Manager["Brand"]]
+    branches: models.Manager["Branch"]
+
     title = models.CharField(_("title"), max_length=255)
     image = models.ImageField(
         _("image"),
@@ -22,11 +27,14 @@ class Brand(TimeStampedModel):
         verbose_name_plural = _("brands")
         ordering = ["title"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
-class Branch(TimeStampedModel):
+class Branch(TimeStampedModel):  # type: ignore[django-manager-missing]
+    objects: ClassVar[models.Manager["Branch"]]
+    categories: models.Manager["Category"]
+
     brand = models.ForeignKey(
         Brand,
         related_name="branches",
@@ -46,11 +54,13 @@ class Branch(TimeStampedModel):
         verbose_name_plural = _("branches")
         ordering = ["title"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
 class Ad(TimeStampedModel):
+    objects: ClassVar[models.Manager["Ad"]]
+
     title = models.CharField(_("title"), max_length=200)
     subtitle = models.TextField(_("subtitle"), blank=True)
     image = models.ImageField(
@@ -64,11 +74,15 @@ class Ad(TimeStampedModel):
         verbose_name = _("ad")
         verbose_name_plural = _("ads")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
-class Category(MPTTModel, TimeStampedModel):
+class Category(MPTTModel, TimeStampedModel):  # type: ignore[django-manager-missing]
+    objects: ClassVar[models.Manager["Category"]]
+    products: models.Manager["Product"]
+    subcategories: models.Manager["Category"]
+
     branch = models.ForeignKey(
         Branch,
         related_name="categories",
@@ -98,7 +112,7 @@ class Category(MPTTModel, TimeStampedModel):
         verbose_name = _("category")
         verbose_name_plural = _("categories")
 
-    def clean(self):
+    def clean(self) -> None:
         super().clean()
         if (
             self.pk
@@ -127,11 +141,13 @@ class Category(MPTTModel, TimeStampedModel):
                 {"branch": _("Category and children must belong to the same branch.")}
             )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
 class Product(TimeStampedModel):
+    objects: ClassVar[models.Manager["Product"]]
+
     category = models.ForeignKey(
         Category,
         related_name="products",
@@ -189,14 +205,14 @@ class Product(TimeStampedModel):
         ]
 
     @property
-    def discount_percentage(self):
+    def discount_percentage(self) -> int:
         if self.compare_at_price is None:
             return 0
 
         discount = self.compare_at_price - self.default_price
         return round((discount / self.compare_at_price) * 100)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title
 
 
@@ -214,7 +230,7 @@ class ProductImage(TimeStampedModel):
         verbose_name_plural = _("product images")
         ordering = ["id"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.product} - {self.id}"
 
 
@@ -252,5 +268,5 @@ class ProductReview(TimeStampedModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.product} - {self.rating}"

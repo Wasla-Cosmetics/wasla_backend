@@ -1,11 +1,22 @@
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, TypedDict
+
 from django.db.models import Case, CharField, F, IntegerField, Q, Value, When
 
 from apps.core.translation import get_localized_field_names
-from apps.store.models import Ad, Brand, Branch, Category, Product
+from apps.store.models import Ad, Branch, Brand, Category, Product
 
 CATALOG_SEARCH_TYPES = ("product", "category", "brand", "branch", "ad")
 
-SEARCH_CONFIG = {
+
+class SearchConfig(TypedDict):
+    model: type[Product] | type[Category] | type[Brand] | type[Branch] | type[Ad]
+    title_fields: tuple[str, ...]
+    secondary_fields: tuple[str, ...]
+    type_order: int
+
+
+SEARCH_CONFIG: dict[str, SearchConfig] = {
     "product": {
         "model": Product,
         "title_fields": ("title",),
@@ -39,14 +50,14 @@ SEARCH_CONFIG = {
 }
 
 
-def _lookup_query(field_names, lookup, value):
+def _lookup_query(field_names: Iterable[str], lookup: str, value: object) -> Q:
     query = Q()
     for field_name in field_names:
         query |= Q(**{f"{field_name}__{lookup}": value})
     return query
 
 
-def _ranked_queryset(result_type, query):
+def _ranked_queryset(result_type: str, query: str) -> Any:
     config = SEARCH_CONFIG[result_type]
     title_fields = get_localized_field_names(*config["title_fields"])
     secondary_fields = get_localized_field_names(*config["secondary_fields"])
@@ -81,7 +92,7 @@ def _ranked_queryset(result_type, query):
     )
 
 
-def search_catalog(query, result_types):
+def search_catalog(query: str, result_types: Sequence[str]) -> Any:
     querysets = [_ranked_queryset(result_type, query) for result_type in result_types]
     combined = querysets[0]
     if len(querysets) > 1:
@@ -89,12 +100,16 @@ def search_catalog(query, result_types):
     return combined.order_by("-search_rank", "type_order", "object_id")
 
 
-def hydrate_search_results(rows):
-    ids_by_type = {result_type: [] for result_type in CATALOG_SEARCH_TYPES}
+def hydrate_search_results(
+    rows: Iterable[Mapping[str, Any]],
+) -> list[dict[str, object]]:
+    ids_by_type: dict[str, list[int]] = {
+        result_type: [] for result_type in CATALOG_SEARCH_TYPES
+    }
     for row in rows:
         ids_by_type[row["result_type"]].append(row["object_id"])
 
-    objects_by_type = {
+    objects_by_type: dict[str, Mapping[int, object]] = {
         "product": Product.objects.select_related("category__branch__brand")
         .prefetch_related("images")
         .in_bulk(ids_by_type["product"]),

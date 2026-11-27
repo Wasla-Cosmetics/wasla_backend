@@ -69,6 +69,8 @@ python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py test
 python -m black --check .
+ruff check .
+mypy
 ```
 
 Run the same checks inside an active Docker stack by prefixing Django commands
@@ -100,7 +102,8 @@ Feature and workflow documentation lives in focused README files:
 - SQLite for simple local development
 - Gunicorn with Uvicorn worker for ASGI serving
 - python-dotenv for environment configuration
-- Black for formatting
+- Black for formatting, Ruff for linting, and project-wide production mypy checks
+- Playwright Chromium for admin visual regression testing
 
 ## Project Structure
 
@@ -115,6 +118,7 @@ Feature and workflow documentation lives in focused README files:
 ├── docker/
 ├── nginx/
 ├── tests/
+│   ├── browser/
 │   └── integration/
 ├── locale/
 │   └── ar/
@@ -149,7 +153,9 @@ Feature and workflow documentation lives in focused README files:
 
 Pull requests verify Django checks, pending migrations, translations, the full
 PostgreSQL test suite, the production settings baseline, the dependency lock
-and audit, Black formatting, container volume initialization, and Nginx health.
+and audit, Black formatting, Ruff linting, production-code mypy checks, ShellCheck,
+the admin login visual baseline, container volume initialization, and Nginx
+health.
 
 Pushes to `dev`, `stage`, and `master` run the deployment workflow after the
 same quality gate. Development uses Mailpit. Staging and production require a

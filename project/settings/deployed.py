@@ -1,3 +1,4 @@
+from typing import cast
 from urllib.parse import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
@@ -19,7 +20,7 @@ if not ALLOWED_HOSTS:
 if "*" in ALLOWED_HOSTS:
     raise ImproperlyConfigured("ALLOWED_HOSTS cannot contain '*' when deployed.")
 
-if REST_FRAMEWORK["NUM_PROXIES"] < 1:
+if cast(int, REST_FRAMEWORK["NUM_PROXIES"]) < 1:
     raise ImproperlyConfigured(
         "TRUSTED_PROXY_COUNT must include every trusted reverse proxy in deployed "
         "environments."
@@ -73,5 +74,5 @@ CSRF_COOKIE_SECURE = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", True)
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
-SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", True)
+SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", True)

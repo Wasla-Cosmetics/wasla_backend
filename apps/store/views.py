@@ -1,22 +1,29 @@
+from typing import Any, cast
+
 from django.db import IntegrityError, transaction
+from django.db.models import Model
 from django.db.models.deletion import ProtectedError
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import APIException
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
+from apps.authentication.models import User
 from apps.core.pagination import StandardPageNumberPagination
 from apps.core.permissions import IsAdminOrReadOnly, IsReviewOwnerOrAdminOrReadOnly
 from apps.core.serializers import AllLanguagesModelSerializer
-from apps.store.filters import BrandFilter, BranchFilter, CategoryFilter, ProductFilter
-from apps.store.models import Ad, Brand, Branch, Category, Product, ProductReview
+from apps.store.filters import BranchFilter, BrandFilter, CategoryFilter, ProductFilter
+from apps.store.models import Ad, Branch, Brand, Category, Product, ProductReview
 from apps.store.search import hydrate_search_results, search_catalog
 from apps.store.serializers import (
     AdSerializer,
-    BrandSerializer,
     BranchSerializer,
+    BrandSerializer,
     CatalogSearchQuerySerializer,
     CatalogSearchResultSerializer,
     CategorySerializer,
@@ -39,7 +46,7 @@ class CatalogResourceInUse(APIException):
 
 
 class ProtectedDestroyMixin:
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance: Model) -> None:
         try:
             instance.delete()
         except ProtectedError as exc:
@@ -55,7 +62,7 @@ class CatalogSearchView(APIView):
     throttle_classes = [CatalogSearchRateThrottle]
     pagination_class = CatalogSearchPagination
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         query_serializer = CatalogSearchQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)
         search_rows = search_catalog(
@@ -64,7 +71,11 @@ class CatalogSearchView(APIView):
         )
 
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(search_rows, request, view=self)
+        page: list[Any] | None = paginator.paginate_queryset(
+            search_rows, request, view=self
+        )
+        if page is None:
+            raise AssertionError("Catalog search pagination must be enabled.")
         results = hydrate_search_results(page)
         serializer = CatalogSearchResultSerializer(
             results,
@@ -128,15 +139,16 @@ class ProductReviewViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["product"]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: BaseSerializer[Any]) -> None:
+        user = cast(User, self.request.user)
         try:
             with transaction.atomic():
-                serializer.save(user=self.request.user)
+                serializer.save(user=user)
         except IntegrityError as exc:
             product = serializer.validated_data["product"]
             if ProductReview._base_manager.filter(
                 product=product,
-                user=self.request.user,
+                user=user,
             ).exists():
                 raise ReviewAlreadyExists() from exc
             raise

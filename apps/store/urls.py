@@ -3,8 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from apps.store.views import (
     AdViewSet,
-    BrandViewSet,
     BranchViewSet,
+    BrandViewSet,
     CategoryViewSet,
     ProductReviewViewSet,
     ProductViewSet,

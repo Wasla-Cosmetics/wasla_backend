@@ -1,5 +1,8 @@
+from typing import Any
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import status
+from rest_framework.request import Request
 
 from apps.authentication.models import User
 from apps.authentication.otp import REGISTER_OTP, RESET_PASSWORD_OTP, issue_otp
@@ -8,7 +11,7 @@ from apps.authentication.tokens import create_refresh_token
 from apps.core.responses import build_response
 
 
-def handle_otp_for_user(phone, action):
+def handle_otp_for_user(phone: str | None, action: str) -> dict[str, Any]:
     if not phone:
         return build_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -54,7 +57,9 @@ def handle_otp_for_user(phone, action):
     return build_response(status_code=status_code, message=message_status, data=data)
 
 
-def generate_successful_auth_response(user, message, request):
+def generate_successful_auth_response(
+    user: User, message: object, request: Request
+) -> dict[str, Any]:
     refresh = create_refresh_token(user)
     user_data = UserSerializer(user, context={"request": request}).data
 

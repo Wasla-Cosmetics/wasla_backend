@@ -1,5 +1,8 @@
 from django.contrib import admin
+from django.db.models import QuerySet
+from django.http import HttpRequest
 from django.utils.html import format_html
+from django.utils.safestring import SafeString
 from django.utils.translation import gettext_lazy as _
 from modeltranslation.admin import TabbedTranslationAdmin
 from unfold.admin import ModelAdmin, TabularInline
@@ -8,8 +11,8 @@ from apps.core.translation import get_localized_field_names
 from apps.store.forms import ProductAdminForm
 from apps.store.models import (
     Ad,
-    Brand,
     Branch,
+    Brand,
     Category,
     Product,
     ProductImage,
@@ -26,6 +29,7 @@ class ProductImageInline(TabularInline):
 
     verbose_name = _("Additional product image")
     verbose_name_plural = _("Additional product images")
+
 
 @admin.register(Brand)
 class BrandAdmin(ModelAdmin, TabbedTranslationAdmin):
@@ -88,11 +92,11 @@ class CategoryAdmin(ModelAdmin, TabbedTranslationAdmin):
     list_filter_submit = True
 
     @admin.display(description=_("Category"), ordering="tree_id")
-    def category_tree(self, obj):
+    def category_tree(self, obj: Category) -> str:
         indentation = "— " * obj.level
         return f"{indentation}{obj.title}"
 
-    def get_queryset(self, request):
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Category]:
         return (
             super()
             .get_queryset(request)
@@ -106,7 +110,7 @@ class ProductAdmin(ModelAdmin):
     form = ProductAdminForm
     change_form_template = "admin/store/product/change_form.html"
     warn_unsaved_form = True
-    
+
     inlines = (ProductImageInline,)
     list_display = (
         "product_thumbnail",
@@ -149,7 +153,7 @@ class ProductAdmin(ModelAdmin):
     list_fullwidth = True
 
     @admin.display(description=_("Image"))
-    def product_thumbnail(self, obj):
+    def product_thumbnail(self, obj: Product) -> str | SafeString:
         if not obj.image:
             return "—"
 

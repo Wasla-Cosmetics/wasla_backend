@@ -1,23 +1,24 @@
 import os
-from pathlib import Path
-from os import environ as env
-from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
+from os import environ as env
+from pathlib import Path
+
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
-def env_bool(name, default=False):
+def env_bool(name: str, default: bool = False) -> bool:
     value = env.get(name)
     if value is None:
         return default
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def env_list(name, default=""):
+def env_list(name: str, default: str = "") -> list[str]:
     value = env.get(name, default)
     return [item.strip() for item in value.split(",") if item.strip()]
 
@@ -180,9 +181,7 @@ UNFOLD = {
                     {
                         "title": _("Product Reviews"),
                         "icon": "reviews",
-                        "link": reverse_lazy(
-                            "admin:store_productreview_changelist"
-                        ),
+                        "link": reverse_lazy("admin:store_productreview_changelist"),
                         "permission": lambda request: request.user.has_perm(
                             "store.view_productreview"
                         ),
@@ -197,9 +196,7 @@ UNFOLD = {
                     {
                         "title": _("Registered Customers"),
                         "icon": "group",
-                        "link": reverse_lazy(
-                            "admin:authentication_user_changelist"
-                        ),
+                        "link": reverse_lazy("admin:authentication_user_changelist"),
                         "permission": lambda request: request.user.has_perm(
                             "authentication.view_user"
                         ),

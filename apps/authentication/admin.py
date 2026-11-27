@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.admin.sites import NotRegistered
+from django.contrib.admin.exceptions import NotRegistered
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group

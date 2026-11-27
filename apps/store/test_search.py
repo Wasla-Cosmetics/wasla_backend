@@ -9,7 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.store.models import Ad, Brand, Branch, Category, Product
+from apps.store.models import Ad, Branch, Brand, Category, Product
 from apps.store.throttles import CatalogSearchRateThrottle
 
 

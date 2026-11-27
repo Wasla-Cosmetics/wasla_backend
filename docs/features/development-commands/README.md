@@ -90,6 +90,48 @@ Check formatting:
 python -m black --check project apps
 ```
 
+## Linting And Type Checks
+
+Run the configured Ruff rules and production-code mypy target:
+
+```bash
+ruff check .
+mypy
+```
+
+The mypy target covers all Python production modules under `apps/` and
+`project/`, plus `manage.py`, and rejects untyped or partially typed function
+definitions. Tests and generated migrations remain outside this gate. External
+packages without typing metadata have narrowly scoped import overrides; do not
+suppress entire application modules to make the gate pass.
+
+Validate shell scripts with ShellCheck when it is installed:
+
+```bash
+shellcheck docker/*.sh tests/integration/*.sh
+```
+
+## Browser Visual Regression
+
+Install the pinned Playwright browser once, then compare the admin login page
+with its committed baseline:
+
+```bash
+python -m playwright install chromium
+RUN_BROWSER_TESTS=1 python manage.py test tests.browser
+```
+
+When an intentional visual change has been reviewed, update and immediately
+verify the baseline:
+
+```bash
+RUN_BROWSER_TESTS=1 UPDATE_VISUAL_BASELINES=1 python manage.py test tests.browser
+RUN_BROWSER_TESTS=1 python manage.py test tests.browser
+```
+
+Unexpected screenshots and pixel-difference images are written to
+`/tmp/wasla-visual-regressions/`. CI uploads that directory on failure.
+
 ## Local Server
 
 ```bash
@@ -155,7 +197,11 @@ python manage.py makemigrations --check --dry-run
 python manage.py compilemessages --ignore ".venv/*" --verbosity 0
 python manage.py test
 python -m black --check .
+ruff check .
+mypy
+shellcheck docker/*.sh tests/integration/*.sh
 ```
 
 CI additionally verifies production settings, the dependency lock and audit,
-PostgreSQL behavior, writable container volumes, and the Nginx healthcheck.
+PostgreSQL behavior, browser visual output, writable container volumes, and the
+Nginx healthcheck.

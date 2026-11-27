@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from django.conf import settings
 from django.core.files import File
@@ -7,7 +8,7 @@ from django.core.files.storage import default_storage
 DEFAULT_MEDIA_NAME = "default.jpeg"
 
 
-def ensure_default_media(**kwargs):
+def ensure_default_media(**kwargs: Any) -> None:
     if default_storage.exists(DEFAULT_MEDIA_NAME):
         return
 

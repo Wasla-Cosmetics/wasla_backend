@@ -16,16 +16,17 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.authentication.models import GuestUser
 from apps.store.admin import (
     AdAdmin,
-    BrandAdmin,
     BranchAdmin,
+    BrandAdmin,
     CategoryAdmin,
     ProductAdmin,
     ProductReviewAdmin,
 )
+from apps.store.forms import ProductAdminForm
 from apps.store.models import (
     Ad,
-    Brand,
     Branch,
+    Brand,
     Category,
     Product,
     ProductImage,
@@ -541,6 +542,46 @@ class StoreAdminSearchTests(TestCase):
         queryset = self.search(ProductReviewAdmin, ProductReview, "غسول")
 
         self.assertQuerySetEqual(queryset, [self.review], ordered=False)
+
+
+class ProductAdminFormTests(TestCase):
+    def test_save_preserves_both_translations_when_arabic_is_active(self):
+        brand = Brand.objects.create(title_en="Wasla", title_ar="وصلة")
+        branch = Branch.objects.create(
+            brand=brand,
+            title_en="Main Branch",
+            title_ar="الفرع الرئيسي",
+        )
+        category = Category.objects.create(
+            branch=branch,
+            title_en="Beauty",
+            title_ar="الجمال",
+        )
+
+        with translation.override("ar"):
+            form = ProductAdminForm(
+                data={
+                    "title_en": "Cleanser",
+                    "title_ar": "غسول",
+                    "description_en": "Gentle daily cleanser",
+                    "description_ar": "غسول يومي لطيف",
+                    "category": category.pk,
+                    "default_price": "150.00",
+                    "compare_at_price": "",
+                    "stock_quantity": "10",
+                    "reward_points": "15",
+                    "is_newest": "",
+                    "is_best_seller": "",
+                }
+            )
+            self.assertTrue(form.is_valid(), form.errors)
+            product = form.save()
+
+        product.refresh_from_db()
+        self.assertEqual(product.title_en, "Cleanser")
+        self.assertEqual(product.title_ar, "غسول")
+        self.assertEqual(product.description_en, "Gentle daily cleanser")
+        self.assertEqual(product.description_ar, "غسول يومي لطيف")
 
 
 @override_settings(MEDIA_ROOT=Path("/tmp/wasla_test_media"))

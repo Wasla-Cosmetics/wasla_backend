@@ -2,7 +2,7 @@
 
 set -eu
 
-project_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+project_root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 image="wasla-volume-init-test:$$"
 media_volume="wasla-media-init-test-$$"
 static_volume="wasla-static-init-test-$$"

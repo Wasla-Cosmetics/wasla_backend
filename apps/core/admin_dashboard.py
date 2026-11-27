@@ -1,15 +1,17 @@
+from typing import Any
+
 from django.db.models import Count, Q, Sum
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from apps.authentication.models import User
 from apps.store.models import Brand, Category, Product, ProductReview
 
-
 LOW_STOCK_THRESHOLD = 5
 
 
-def dashboard_callback(request, context):
+def dashboard_callback(request: HttpRequest, context: dict[str, Any]) -> dict[str, Any]:
     product_metrics = Product.objects.aggregate(
         total_products=Count("id"),
         total_units=Sum("stock_quantity"),
@@ -75,7 +77,8 @@ def dashboard_callback(request, context):
             "tone": "warning",
             "url": (
                 reverse("admin:store_product_changelist")
-                + f"?stock_quantity__lte={LOW_STOCK_THRESHOLD}"
+                + "?stock_quantity__gt=0"
+                + f"&stock_quantity__lte={LOW_STOCK_THRESHOLD}"
             ),
         },
         {
@@ -102,10 +105,9 @@ def dashboard_callback(request, context):
         "-created_at"
     )[:6]
 
-    recent_reviews = (
-        ProductReview.objects.select_related("product", "user")
-        .order_by("-created_at")[:6]
-    )
+    recent_reviews = ProductReview.objects.select_related("product", "user").order_by(
+        "-created_at"
+    )[:6]
 
     context.update(
         {
