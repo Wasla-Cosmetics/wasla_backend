@@ -17,7 +17,7 @@ Install dependencies:
 
 ```bash
 pip install --upgrade pip
-pip install -r requirements/local.txt
+pip install --upgrade -r requirements/local.txt
 ```
 
 Use SQLite for local-only commands:
@@ -72,12 +72,30 @@ Run system checks:
 python manage.py check
 ```
 
-Run migrations validation, tests, and formatting checks before committing:
+Run migrations validation, tests, and code-quality checks before committing:
 
 ```bash
 python manage.py makemigrations --check --dry-run
 python manage.py test
 python -m black --check .
+ruff check .
+mypy
+```
+
+Run the browser visual regression test after installing its pinned Chromium
+build once:
+
+```bash
+python -m playwright install chromium
+RUN_BROWSER_TESTS=1 python manage.py test tests.browser
+```
+
+To intentionally accept a reviewed admin-login visual change, regenerate the
+tracked baseline and then rerun the comparison:
+
+```bash
+RUN_BROWSER_TESTS=1 UPDATE_VISUAL_BASELINES=1 python manage.py test tests.browser
+RUN_BROWSER_TESTS=1 python manage.py test tests.browser
 ```
 
 SQLite does not exercise PostgreSQL-specific behavior. Verify query,

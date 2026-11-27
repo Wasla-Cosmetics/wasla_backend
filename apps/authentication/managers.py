@@ -1,9 +1,21 @@
-from django.contrib.auth.models import UserManager as BaseUserManager
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from django.contrib.auth.models import UserManager as DjangoUserManager
 from django.utils.translation import gettext_lazy as _
 
+if TYPE_CHECKING:
+    from apps.authentication.models import User
 
-class UserManager(BaseUserManager):
-    def create_user(self, phone, password=None, **extra_fields):
+
+class UserManager(DjangoUserManager["User"]):
+    def create_user(  # type: ignore[override]
+        self,
+        phone: str,
+        password: str | None = None,
+        **extra_fields: Any,
+    ) -> User:
         if not phone:
             raise ValueError(_("The phone number must be set"))
 
@@ -16,7 +28,12 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone, password=None, **extra_fields):
+    def create_superuser(  # type: ignore[override]
+        self,
+        phone: str,
+        password: str | None = None,
+        **extra_fields: Any,
+    ) -> User:
         extra_fields.setdefault("is_active", True)
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)

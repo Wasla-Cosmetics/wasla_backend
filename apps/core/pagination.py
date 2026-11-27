@@ -1,8 +1,9 @@
 from math import ceil
+from typing import Any
 
+from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework import status
 
 from apps.core.responses import build_response
 
@@ -11,8 +12,13 @@ class StandardPageNumberPagination(PageNumberPagination):
     page_size_query_param = "page_size"
     max_page_size = 100
 
-    def get_paginated_response(self, data):
+    def get_paginated_response(self, data: Any) -> Response:
+        if self.request is None or self.page is None:
+            raise AssertionError("Pagination must run before building a response.")
+
         page_size = self.get_page_size(self.request)
+        if page_size is None:
+            raise AssertionError("A page size must be configured.")
 
         return Response(
             build_response(

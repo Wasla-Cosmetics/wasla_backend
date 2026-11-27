@@ -1,15 +1,16 @@
 import os
 from decimal import Decimal
+from typing import Any
 
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import transaction
 
-from apps.authentication.models import GuestUser, guest_user_expiration
+from apps.authentication.models import GuestUser, User, guest_user_expiration
 from apps.store.models import (
     Ad,
-    Brand,
     Branch,
+    Brand,
     Category,
     Product,
     ProductImage,
@@ -20,14 +21,14 @@ from apps.store.models import (
 class Command(BaseCommand):
     help = "Create or update bilingual development seed data."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "--password",
             default="WaslaDemo123!",
             help="Password assigned to the seeded demo accounts.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         environment = os.environ.get("ENV", "local").strip().lower()
         if environment not in {"local", "dev", "development"}:
             raise CommandError(
@@ -57,7 +58,7 @@ class Command(BaseCommand):
         self.stdout.write("Admin phone: +201000000001")
         self.stdout.write("Customer phones: +201000000002, +201000000003")
 
-    def _seed_users(self, password):
+    def _seed_users(self, password: str) -> dict[str, User]:
         user_model = get_user_model()
         user_data = (
             {
@@ -85,10 +86,10 @@ class Command(BaseCommand):
                 "is_superuser": False,
             },
         )
-        users = {}
+        users: dict[str, User] = {}
 
         for values in user_data:
-            phone = values["phone"]
+            phone = str(values["phone"])
             defaults = {**values, "is_active": True}
             defaults.pop("phone")
             user, _ = user_model.objects.update_or_create(
@@ -101,13 +102,13 @@ class Command(BaseCommand):
 
         return users
 
-    def _seed_guest_user(self):
+    def _seed_guest_user(self) -> None:
         GuestUser.objects.update_or_create(
             session_key="seed-guest-session",
             defaults={"expires_at": guest_user_expiration()},
         )
 
-    def _seed_ads(self):
+    def _seed_ads(self) -> None:
         ads = (
             (
                 "Glow Every Day",
@@ -136,7 +137,7 @@ class Command(BaseCommand):
                 },
             )
 
-    def _seed_catalog_owners(self):
+    def _seed_catalog_owners(self) -> Branch:
         brand, _ = Brand.objects.update_or_create(
             title_en="Wasla",
             defaults={
@@ -156,8 +157,8 @@ class Command(BaseCommand):
         )
         return branch
 
-    def _seed_categories(self, branch):
-        categories = {}
+    def _seed_categories(self, branch: Branch) -> dict[str, Category]:
+        categories: dict[str, Category] = {}
         roots = (
             ("skincare", "Skincare", "العناية بالبشرة"),
             ("haircare", "Hair Care", "العناية بالشعر"),
@@ -197,7 +198,7 @@ class Command(BaseCommand):
 
         return categories
 
-    def _seed_products(self, categories):
+    def _seed_products(self, categories: dict[str, Category]) -> dict[str, Product]:
         product_data = (
             (
                 "Vitamin C Glow Serum",
@@ -278,7 +279,7 @@ class Command(BaseCommand):
                 True,
             ),
         )
-        products = {}
+        products: dict[str, Product] = {}
 
         for (
             title_en,
@@ -317,7 +318,7 @@ class Command(BaseCommand):
 
         return products
 
-    def _seed_product_images(self, products):
+    def _seed_product_images(self, products: dict[str, Product]) -> None:
         for product in products.values():
             existing_count = ProductImage.objects.filter(
                 product=product,
@@ -326,7 +327,9 @@ class Command(BaseCommand):
             for _ in range(max(0, 2 - existing_count)):
                 ProductImage.objects.create(product=product, image="default.jpeg")
 
-    def _seed_product_reviews(self, products, users):
+    def _seed_product_reviews(
+        self, products: dict[str, Product], users: dict[str, User]
+    ) -> None:
         customers = (
             users["+201000000002"],
             users["+201000000003"],

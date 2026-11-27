@@ -1,13 +1,13 @@
-from datetime import timedelta
 import json
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password, make_password
-from django.core.cache import cache
 from django.core import mail
+from django.core.cache import cache
 from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -16,7 +16,6 @@ from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory, APITestCase
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
 
 from .models import GuestUser
 from .otp import (
@@ -84,6 +83,7 @@ class WebhookOtpDeliveryBackendTests(SimpleTestCase):
         )
         self.assertEqual(request.get_header("Authorization"), "Bearer secret-token")
         self.assertEqual(mocked_urlopen.call_args.kwargs["timeout"], 4)
+
 
 @override_settings(
     REST_FRAMEWORK={
@@ -446,6 +446,29 @@ class AuthenticationApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("refresh", response.data["errors"])
+
+    def test_logout_returns_flat_error_for_invalid_refresh_token(self):
+        user = self.user_model.objects.create_user(
+            phone="+201000000027",
+            email="invalid-logout@example.com",
+            full_name="Invalid Logout User",
+            password="NileBridgePass123!",
+            is_active=True,
+        )
+        access = RefreshToken.for_user(user).access_token
+
+        response = self.client.post(
+            reverse("logout"),
+            {"refresh": "invalid"},
+            HTTP_AUTHORIZATION=f"Bearer {access}",
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["errors"],
+            {"refresh": "Invalid refresh token"},
+        )
 
     def test_login_is_throttled_by_phone_across_source_ips(self):
         self.user_model.objects.create_user(

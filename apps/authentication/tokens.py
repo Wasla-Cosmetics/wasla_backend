@@ -4,11 +4,12 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.request import Request
 from rest_framework_simplejwt.token_blacklist.models import (
     BlacklistedToken,
     OutstandingToken,
 )
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, Token
 
 from apps.authentication.models import GuestUser, User
 
@@ -16,11 +17,11 @@ GUEST_TOKEN_HEADER = "X-Guest-Token"
 TOKEN_VERSION_CLAIM = "token_version"
 
 
-def get_guest_token(request):
+def get_guest_token(request: Request) -> str | None:
     return request.headers.get(GUEST_TOKEN_HEADER)
 
 
-def get_guest_user(token):
+def get_guest_user(token: str | None) -> GuestUser | None:
     if not token:
         return None
 
@@ -33,19 +34,19 @@ def get_guest_user(token):
         return None
 
 
-def create_refresh_token(user):
+def create_refresh_token(user: User) -> RefreshToken:
     refresh = RefreshToken.for_user(user)
     refresh[TOKEN_VERSION_CLAIM] = user.token_version
     return refresh
 
 
-def validate_token_version(user, token):
+def validate_token_version(user: User, token: Token) -> None:
     token_version = token.get(TOKEN_VERSION_CLAIM, 0)
     if token_version != user.token_version:
         raise AuthenticationFailed(_("Token is no longer valid."))
 
 
-def revoke_user_tokens(user):
+def revoke_user_tokens(user: User) -> None:
     user.token_version += 1
     user.save(update_fields=["token_version"])
 
@@ -56,13 +57,13 @@ def revoke_user_tokens(user):
     )
 
 
-def create_password_reset_token(user):
+def create_password_reset_token(user: User) -> str:
     uid = urlsafe_base64_encode(force_bytes(user.pk))
     token = default_token_generator.make_token(user)
     return f"{uid}.{token}"
 
 
-def get_password_reset_user(reset_token):
+def get_password_reset_user(reset_token: str) -> User | None:
     try:
         uid, token = reset_token.split(".", 1)
         user_id = force_str(urlsafe_base64_decode(uid))

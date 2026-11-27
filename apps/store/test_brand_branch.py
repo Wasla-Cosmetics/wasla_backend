@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.store.models import Brand, Branch, Category, Product
+from apps.store.models import Branch, Brand, Category, Product
 
 
 @override_settings(MEDIA_ROOT=Path("/tmp/wasla_test_media"))

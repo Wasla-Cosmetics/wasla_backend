@@ -2,7 +2,7 @@
 
 set -eu
 
-project_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+project_root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 suffix=$$
 image="wasla-nginx-health-test:$suffix"
 network="wasla-nginx-health-test-$suffix"

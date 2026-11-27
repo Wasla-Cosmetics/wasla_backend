@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from typing import ClassVar
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -10,12 +11,12 @@ from apps.authentication.managers import UserManager
 from apps.core.models import TimeStampedModel
 
 
-def guest_user_expiration():
+def guest_user_expiration() -> datetime:
     return timezone.now() + timedelta(days=settings.GUEST_USER_TTL_DAYS)
 
 
 class User(AbstractUser, TimeStampedModel):
-    username = None
+    username = None  # type: ignore[assignment]
     phone = models.CharField(_("phone"), max_length=255, unique=True)
     email = models.EmailField(_("email"), max_length=255, unique=True)
     full_name = models.CharField(_("full name"), max_length=255)
@@ -30,7 +31,7 @@ class User(AbstractUser, TimeStampedModel):
     )
     otp_expires_at = models.DateTimeField(_("otp expires at"), null=True, blank=True)
     token_version = models.PositiveIntegerField(_("token version"), default=0)
-    objects = UserManager()
+    objects: ClassVar[UserManager] = UserManager()
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["email", "full_name"]
 
@@ -38,7 +39,7 @@ class User(AbstractUser, TimeStampedModel):
         verbose_name = _("user")
         verbose_name_plural = _("users")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.phone
 
 
@@ -51,16 +52,16 @@ class GuestUser(TimeStampedModel):
     )
 
     @property
-    def is_anonymous(self):
+    def is_anonymous(self) -> bool:
         return True
 
     @property
-    def is_authenticated(self):
+    def is_authenticated(self) -> bool:
         return False
 
     class Meta:
         verbose_name = _("guest user")
         verbose_name_plural = _("guest users")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.session_key

@@ -61,13 +61,16 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements/base.lock
+          cache-dependency-path: |
+            requirements/base.lock
+            requirements/quality.txt
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes gettext
+          sudo apt-get install --yes gettext shellcheck
           python -m pip install -r requirements/base.lock
+          python -m pip install -r requirements/quality.txt
           python -m pip install pip-audit==2.10.1 pip-tools==7.6.2
 
       - name: Verify application
@@ -76,6 +79,10 @@ jobs:
           python manage.py makemigrations --check --dry-run
           python manage.py compilemessages --ignore ".venv/*" --verbosity 0
           python manage.py test
+          black . --check
+          ruff check .
+          mypy
+          shellcheck docker/*.sh tests/integration/*.sh
           pip-compile --no-header --no-annotate --strip-extras --generate-hashes --resolver=backtracking --output-file=requirements/base.lock requirements/base.txt
           git diff --exit-code -- requirements/base.lock
           pip-audit --require-hashes -r requirements/base.lock
@@ -157,6 +164,8 @@ jobs:
               email_use_ssl=False
               default_from_email=no-reply@dev.wasla.local
               hsts_seconds=0
+              hsts_include_subdomains=False
+              hsts_preload=False
               environment=development
               ;;
             stage)
@@ -174,7 +183,9 @@ jobs:
               email_use_tls="${STAGE_EMAIL_USE_TLS:-True}"
               email_use_ssl="${STAGE_EMAIL_USE_SSL:-False}"
               default_from_email="$STAGE_DEFAULT_FROM_EMAIL"
-              hsts_seconds=86400
+              hsts_seconds=31536000
+              hsts_include_subdomains=True
+              hsts_preload=True
               environment=staging
               ;;
             master)
@@ -193,6 +204,8 @@ jobs:
               email_use_ssl="${MASTER_EMAIL_USE_SSL:-False}"
               default_from_email="$MASTER_DEFAULT_FROM_EMAIL"
               hsts_seconds=31536000
+              hsts_include_subdomains=True
+              hsts_preload=True
               environment=production
               ;;
             *) echo "Unsupported branch: $BRANCH" >&2; exit 1 ;;
@@ -217,6 +230,8 @@ jobs:
             echo "EMAIL_USE_SSL=$email_use_ssl"
             echo "DEFAULT_FROM_EMAIL=$default_from_email"
             echo "SECURE_HSTS_SECONDS=$hsts_seconds"
+            echo "SECURE_HSTS_INCLUDE_SUBDOMAINS=$hsts_include_subdomains"
+            echo "SECURE_HSTS_PRELOAD=$hsts_preload"
             echo "DEPLOY_SHA=$(git rev-parse HEAD)"
             echo "ENV=$environment"
           } >> "$GITHUB_ENV"
@@ -323,7 +338,7 @@ jobs:
           port: ${{ env.SSH_PORT }}
           username: ${{ env.SSH_USER }}
           password: ${{ env.SSH_PASSWORD }}
-          envs: GIT_BRANCH,DEPLOY_SHA,DEPLOY_PATH,SERVER_NAME,DJANGO_PORT,POSTGRES_HOST_PORT,COMPOSE_PROFILES,ENV,SECRET_KEY,ALLOWED_HOSTS,CSRF_TRUSTED_ORIGINS,TRUSTED_PROXY_COUNT,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,OTP_DELIVERY_BACKEND,OTP_WEBHOOK_URL,OTP_WEBHOOK_TOKEN,EMAIL_BACKEND,EMAIL_HOST,EMAIL_PORT,EMAIL_HOST_USER,EMAIL_HOST_PASSWORD,EMAIL_USE_TLS,EMAIL_USE_SSL,DEFAULT_FROM_EMAIL,SECURE_HSTS_SECONDS
+          envs: GIT_BRANCH,DEPLOY_SHA,DEPLOY_PATH,SERVER_NAME,DJANGO_PORT,POSTGRES_HOST_PORT,COMPOSE_PROFILES,ENV,SECRET_KEY,ALLOWED_HOSTS,CSRF_TRUSTED_ORIGINS,TRUSTED_PROXY_COUNT,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,OTP_DELIVERY_BACKEND,OTP_WEBHOOK_URL,OTP_WEBHOOK_TOKEN,EMAIL_BACKEND,EMAIL_HOST,EMAIL_PORT,EMAIL_HOST_USER,EMAIL_HOST_PASSWORD,EMAIL_USE_TLS,EMAIL_USE_SSL,DEFAULT_FROM_EMAIL,SECURE_HSTS_SECONDS,SECURE_HSTS_INCLUDE_SUBDOMAINS,SECURE_HSTS_PRELOAD
           script: |
             set -euo pipefail
             cd "$DEPLOY_PATH"
@@ -341,7 +356,7 @@ jobs:
                 echo "Refusing multi-line value for $key" >&2
                 exit 1
               fi
-              value="${value//\'/\'\\\'\'}"
+              value="${value//\'/\\\'}"
               printf "%s='%s'\n" "$key" "$value" >> "$tmp_env"
             }
 
@@ -360,6 +375,8 @@ jobs:
             write_env_var CSRF_COOKIE_SECURE "True"
             write_env_var SECURE_SSL_REDIRECT "True"
             write_env_var SECURE_HSTS_SECONDS "$SECURE_HSTS_SECONDS"
+            write_env_var SECURE_HSTS_INCLUDE_SUBDOMAINS "$SECURE_HSTS_INCLUDE_SUBDOMAINS"
+            write_env_var SECURE_HSTS_PRELOAD "$SECURE_HSTS_PRELOAD"
             write_env_var AUTH_OTP_DELIVERY_BACKEND "$OTP_DELIVERY_BACKEND"
             if [ "$OTP_DELIVERY_BACKEND" = "apps.authentication.otp.WebhookOtpDeliveryBackend" ]; then
               write_env_var AUTH_OTP_WEBHOOK_URL "$OTP_WEBHOOK_URL"

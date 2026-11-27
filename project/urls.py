@@ -1,8 +1,9 @@
-from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
 from django.db import DatabaseError, connection
 from django.http import HttpResponse
+from django.http.request import HttpRequest
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 
@@ -13,7 +14,7 @@ admin.site.site_title = _("Wasla Admin Portal")
 admin.site.index_title = _("Welcome to Wasla Admin Portal")
 
 
-def health_check(request):
+def health_check(request: HttpRequest) -> HttpResponse:
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")

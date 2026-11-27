@@ -1,10 +1,12 @@
+from rest_framework.request import Request
 from rest_framework.throttling import SimpleRateThrottle
+from rest_framework.views import APIView
 
 
 class CatalogSearchRateThrottle(SimpleRateThrottle):
     scope = "catalog_search"
 
-    def get_cache_key(self, request, view):
+    def get_cache_key(self, request: Request, view: APIView) -> str:
         return self.cache_format % {
             "scope": self.scope,
             "ident": self.get_ident(request),

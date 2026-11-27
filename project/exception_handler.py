@@ -1,10 +1,12 @@
 from collections.abc import Mapping
+from typing import Any
+
 from rest_framework.views import exception_handler
 
 from apps.core.responses import build_response, extract_error_payload
 
 
-def flatten_errors(errors):
+def flatten_errors(errors: Any) -> Any:
     if isinstance(errors, list):
         if not errors:
             return errors
@@ -26,7 +28,7 @@ def flatten_errors(errors):
     return flattened
 
 
-def custom_exception_handler(exc, context):
+def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Any:
     response = exception_handler(exc, context)
 
     if response:

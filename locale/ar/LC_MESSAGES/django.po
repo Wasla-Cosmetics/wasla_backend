@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Wasla Backend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-24 11:25+0000\n"
+"POT-Creation-Date: 2026-11-27 11:58+0000\n"
 "PO-Revision-Date: 2026-07-24 00:00+0000\n"
 "Last-Translator: Wasla Team\n"
 "Language-Team: Arabic\n"
@@ -15,48 +15,274 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
-#: project/settings/local.py:153
-msgid "English"
-msgstr "الإنجليزية"
+#: apps/authentication/admin.py:58
+msgid "Account"
+msgstr "الحساب"
 
-#: project/settings/local.py:154
-msgid "Arabic"
-msgstr "العربية"
+#: apps/authentication/admin.py:68
+msgid "Personal information"
+msgstr "المعلومات الشخصية"
 
-#: project/urls.py:8
-msgid "Wasla Admin"
-msgstr "إدارة وصلة"
+#: apps/authentication/admin.py:78
+msgid "Security information"
+msgstr "معلومات الأمان"
 
-#: project/urls.py:9
-msgid "Wasla Admin Portal"
-msgstr "بوابة إدارة وصلة"
+#: apps/authentication/admin.py:90
+msgid "Permissions"
+msgstr "الصلاحيات"
 
-#: project/urls.py:10
-msgid "Welcome to Wasla Admin Portal"
-msgstr "مرحبًا بك في بوابة إدارة وصلة"
+#: apps/authentication/admin.py:101
+msgid "Important dates"
+msgstr "التواريخ المهمة"
 
-#: apps/core/management/commands/startapp.py:13
-msgid ""
-"Create a Django app, fix its dotted app path, and register it in LOCAL_APPS. "
-"A plain name creates the app at project root. A path creates it at that path. "
-"Examples: startapp orders, startapp apps/orders, startapp orders apps/orders."
-msgstr ""
-"ينشئ تطبيق Django، ويصحح مساره النقطي، ويسجله في LOCAL_APPS. الاسم البسيط "
-"ينشئ التطبيق في جذر المشروع. والمسار ينشئه في ذلك المسار. أمثلة: startapp "
-"orders، startapp apps/orders، startapp orders apps/orders."
+#: apps/authentication/admin.py:115
+msgid "Create user"
+msgstr "إنشاء مستخدم"
+
+#: apps/authentication/authentication.py:29
+msgid "Invalid guest token."
+msgstr "رمز الزائر غير صالح."
+
+#: apps/authentication/managers.py:8
+msgid "The phone number must be set"
+msgstr "يجب إدخال رقم الهاتف"
+
+#: apps/authentication/managers.py:25
+msgid "Superuser must have is_staff=True."
+msgstr "يجب أن تكون قيمة is_staff=True للمستخدم المشرف."
+
+#: apps/authentication/managers.py:27
+msgid "Superuser must have is_superuser=True."
+msgstr "يجب أن تكون قيمة is_superuser=True للمستخدم المشرف."
+
+#: apps/authentication/models.py:19
+msgid "phone"
+msgstr "الهاتف"
+
+#: apps/authentication/models.py:20
+msgid "email"
+msgstr "البريد الإلكتروني"
+
+#: apps/authentication/models.py:21
+msgid "full name"
+msgstr "الاسم الكامل"
+
+#: apps/authentication/models.py:22
+msgid "active"
+msgstr "نشط"
+
+#: apps/authentication/models.py:23 apps/store/models.py:153
+msgid "reward points"
+msgstr "نقاط المكافآت"
+
+#: apps/authentication/models.py:24
+msgid "otp"
+msgstr "رمز التحقق"
+
+#: apps/authentication/models.py:26
+msgid "otp purpose"
+msgstr "غرض رمز التحقق"
+
+#: apps/authentication/models.py:31
+msgid "otp expires at"
+msgstr "وقت انتهاء رمز التحقق"
+
+#: apps/authentication/models.py:32
+msgid "token version"
+msgstr "إصدار الرمز"
+
+#: apps/authentication/models.py:38 apps/store/models.py:232
+msgid "user"
+msgstr "المستخدم"
+
+#: apps/authentication/models.py:39
+msgid "users"
+msgstr "المستخدمون"
+
+#: apps/authentication/models.py:46
+msgid "session key"
+msgstr "مفتاح الجلسة"
+
+#: apps/authentication/models.py:48
+msgid "expires at"
+msgstr "ينتهي في"
+
+#: apps/authentication/models.py:62
+msgid "guest user"
+msgstr "مستخدم زائر"
+
+#: apps/authentication/models.py:63
+msgid "guest users"
+msgstr "المستخدمون الزائرون"
+
+#: apps/authentication/otp.py:22
+msgid "OTP delivery is temporarily unavailable."
+msgstr "خدمة إرسال رمز التحقق غير متاحة مؤقتًا."
+
+#: apps/authentication/otp.py:35
+msgid "Your Wasla verification code"
+msgstr "رمز التحقق الخاص بك من وصلة"
+
+#: apps/authentication/otp.py:37
+#, python-format
+msgid "Your verification code is %(otp)s. It expires in %(minutes)s minutes."
+msgstr "رمز التحقق الخاص بك هو %(otp)s. تنتهي صلاحيته خلال %(minutes)s دقائق."
+
+#: apps/authentication/serializers.py:29 apps/authentication/serializers.py:178
+msgid "Invalid refresh token"
+msgstr "رمز التحديث غير صالح"
+
+#: apps/authentication/serializers.py:47 apps/authentication/serializers.py:50
+#: apps/authentication/serializers.py:53
+msgid "Invalid credentials."
+msgstr "بيانات تسجيل الدخول غير صحيحة."
+
+#: apps/authentication/serializers.py:76
+msgid "Invalid or expired OTP"
+msgstr "رمز التحقق غير صالح أو منتهي الصلاحية"
+
+#: apps/authentication/serializers.py:99
+msgid "Invalid or expired reset token"
+msgstr "رمز إعادة التعيين غير صالح أو منتهي الصلاحية"
+
+#: apps/authentication/serializers.py:103
+#: apps/authentication/serializers.py:145
+msgid "Passwords do not match"
+msgstr "كلمتا المرور غير متطابقتين"
+
+#: apps/authentication/serializers.py:151
+msgid "Old password is incorrect"
+msgstr "كلمة المرور القديمة غير صحيحة"
+
+#: apps/authentication/serializers.py:184
+msgid "Refresh token does not belong to this user."
+msgstr "رمز التحديث لا يخص هذا المستخدم."
+
+#: apps/authentication/serializers.py:204
+msgid "Password is incorrect"
+msgstr "كلمة المرور غير صحيحة"
+
+#: apps/authentication/serializers.py:248 apps/store/serializers.py:228
+msgid "This field is required."
+msgstr "هذا الحقل مطلوب."
+
+#: apps/authentication/serializers.py:263
+#: apps/authentication/serializers.py:290
+#: apps/authentication/serializers.py:302
+msgid "Email already exists"
+msgstr "البريد الإلكتروني موجود بالفعل"
+
+#: apps/authentication/serializers.py:277
+msgid "Phone number already exists and active"
+msgstr "رقم الهاتف موجود بالفعل ومفعّل"
+
+#: apps/authentication/serializers.py:284
+msgid "Phone number already exists but not active"
+msgstr "رقم الهاتف موجود بالفعل لكنه غير مفعّل"
+
+#: apps/authentication/tokens.py:45
+msgid "Token is no longer valid."
+msgstr "لم يعد الرمز صالحًا."
+
+#: apps/authentication/utils.py:15
+msgid "Phone number is required"
+msgstr "رقم الهاتف مطلوب"
+
+#: apps/authentication/utils.py:25
+msgid "User not found"
+msgstr "المستخدم غير موجود"
+
+#: apps/authentication/utils.py:30 apps/authentication/utils.py:51
+msgid "If the account exists, an OTP has been sent."
+msgstr "إذا كان الحساب موجودًا، فقد تم إرسال رمز تحقق."
+
+#: apps/authentication/utils.py:34 apps/authentication/utils.py:43
+msgid "OTP sent"
+msgstr "تم إرسال رمز التحقق"
+
+#: apps/authentication/utils.py:40
+msgid "Registration successful, OTP sent"
+msgstr "تم التسجيل بنجاح، وتم إرسال رمز التحقق"
+
+#: apps/authentication/views.py:72
+msgid "Login successful"
+msgstr "تم تسجيل الدخول بنجاح"
+
+#: apps/authentication/views.py:100 apps/authentication/views.py:105
+msgid "OTP verified"
+msgstr "تم التحقق من رمز التحقق"
+
+#: apps/authentication/views.py:123
+msgid "Password reset successfully"
+msgstr "تمت إعادة تعيين كلمة المرور بنجاح"
+
+#: apps/authentication/views.py:149
+msgid "Password changed successfully"
+msgstr "تم تغيير كلمة المرور بنجاح"
+
+#: apps/authentication/views.py:168
+msgid "Logout successful"
+msgstr "تم تسجيل الخروج بنجاح"
+
+#: apps/authentication/views.py:186
+msgid "Account deleted successfully"
+msgstr "تم حذف الحساب بنجاح"
+
+#: apps/core/admin_dashboard.py:54 project/settings/local.py:141
+msgid "Products"
+msgstr "المنتجات"
+
+#: apps/core/admin_dashboard.py:56
+msgid "Products in the catalog"
+msgstr "المنتجات الموجودة في الكتالوج"
+
+#: apps/core/admin_dashboard.py:62
+msgid "Inventory Units"
+msgstr "وحدات المخزون"
+
+#: apps/core/admin_dashboard.py:64
+msgid "Available product units"
+msgstr "وحدات المنتجات المتاحة"
+
+#: apps/core/admin_dashboard.py:70
+msgid "Low Stock"
+msgstr "مخزون منخفض"
+
+#: apps/core/admin_dashboard.py:72
+msgid "Products with 1–5 units"
+msgstr "المنتجات التي تحتوي على 1–5 وحدات"
+
+#: apps/core/admin_dashboard.py:82 project/settings/local.py:191
+msgid "Customers"
+msgstr "العملاء"
+
+#: apps/core/admin_dashboard.py:84
+msgid "Registered customer accounts"
+msgstr "حسابات العملاء المسجلين"
+
+#: apps/core/admin_dashboard.py:111 project/settings/local.py:76
+#: project/settings/local.py:129 templates/admin/index.html:21
+msgid "Seller Dashboard"
+msgstr "لوحة تحكم البائع"
+
+#: apps/core/management/commands/startapp.py:14
+msgid "Create a Django app, fix its dotted app path, and register it in LOCAL_APPS. A plain name creates the app at project root. A path creates it at that path. Examples: startapp orders, startapp apps/orders, startapp orders apps/orders."
+msgstr "ينشئ تطبيق Django، ويصحح مساره النقطي، ويسجله في LOCAL_APPS. الاسم البسيط ينشئ التطبيق في جذر المشروع. والمسار ينشئه في ذلك المسار. أمثلة: startapp orders، startapp apps/orders، startapp orders apps/orders."
 
 #: apps/core/management/commands/startapp.py:28
+#, python-format
 msgid "App already exists: %(path)s"
 msgstr "التطبيق موجود بالفعل: %(path)s"
 
 #: apps/core/management/commands/startapp.py:44
+#, python-format
 msgid "Created and registered app: %(app_path)s"
 msgstr "تم إنشاء التطبيق وتسجيله: %(app_path)s"
 
 #: apps/core/management/commands/startapp.py:51
+#, python-format
 msgid "Invalid app name: %(app_name)s. Use a valid Python identifier."
 msgstr "اسم التطبيق غير صالح: %(app_name)s. استخدم معرّف Python صالحًا."
 
@@ -72,458 +298,509 @@ msgstr "تعذر العثور على نهاية LOCAL_APPS في project/settings
 msgid "Could not find LOCAL_APPS in project/settings/local.py"
 msgstr "تعذر العثور على LOCAL_APPS في project/settings/local.py"
 
-#: apps/authentication/models.py:9
-msgid "phone"
-msgstr "الهاتف"
-
-#: apps/authentication/models.py:10
-msgid "email"
-msgstr "البريد الإلكتروني"
-
-#: apps/authentication/models.py:11
-msgid "full name"
-msgstr "الاسم الكامل"
-
-#: apps/authentication/models.py:12
-msgid "active"
-msgstr "نشط"
-
-#: apps/authentication/models.py:14
-msgid "otp"
-msgstr "رمز التحقق"
-
-#: apps/authentication/models.py:15
-msgid "otp expires at"
-msgstr "وقت انتهاء رمز التحقق"
-
-#: apps/authentication/models.py:16 apps/authentication/models.py:32
-#: apps/store/models.py:11 apps/store/models.py:33 apps/store/models.py:72
+#: apps/core/models.py:6
 msgid "created at"
 msgstr "تاريخ الإنشاء"
 
-#: apps/authentication/models.py:17 apps/authentication/models.py:33
-#: apps/store/models.py:12 apps/store/models.py:34 apps/store/models.py:73
+#: apps/core/models.py:7
 msgid "updated at"
 msgstr "تاريخ التحديث"
 
-#: apps/authentication/models.py:31
-msgid "session key"
-msgstr "مفتاح الجلسة"
-
-#: apps/authentication/admin.py:19
-msgid "Personal info"
-msgstr "المعلومات الشخصية"
-
-#: apps/authentication/admin.py:20
-msgid "OTP"
-msgstr "رمز التحقق"
-
-#: apps/authentication/admin.py:22
-msgid "Permissions"
-msgstr "الصلاحيات"
-
-#: apps/authentication/admin.py:34
-msgid "Important dates"
-msgstr "التواريخ المهمة"
-
-#: apps/authentication/serializers.py:93 apps/authentication/serializers.py:125
-msgid "Passwords do not match"
-msgstr "كلمتا المرور غير متطابقتين"
-
-#: apps/authentication/serializers.py:131
-msgid "Old password is incorrect"
-msgstr "كلمة المرور القديمة غير صحيحة"
-
-#: apps/authentication/serializers.py:158
-msgid "Invalid refresh token"
-msgstr "رمز التحديث غير صالح"
-
-#: apps/authentication/serializers.py:175
-msgid "Password is incorrect"
-msgstr "كلمة المرور غير صحيحة"
-
-#: apps/authentication/serializers.py:219
-msgid "This field is required."
-msgstr "هذا الحقل مطلوب."
-
-#: apps/authentication/serializers.py:234 apps/authentication/serializers.py:261
-#: apps/authentication/serializers.py:277
-msgid "Email already exists"
-msgstr "البريد الإلكتروني موجود بالفعل"
-
-#: apps/authentication/serializers.py:248
-msgid "Phone number already exists and active"
-msgstr "رقم الهاتف موجود بالفعل ومفعّل"
-
-#: apps/authentication/serializers.py:255
-msgid "Phone number already exists but not active"
-msgstr "رقم الهاتف موجود بالفعل لكنه غير مفعّل"
-
-#: apps/authentication/managers.py:8
-msgid "The phone number must be set"
-msgstr "يجب إدخال رقم الهاتف"
-
-#: apps/authentication/managers.py:25
-msgid "Superuser must have is_staff=True."
-msgstr "يجب أن تكون قيمة is_staff=True للمستخدم المشرف."
-
-#: apps/authentication/managers.py:27
-msgid "Superuser must have is_superuser=True."
-msgstr "يجب أن تكون قيمة is_superuser=True للمستخدم المشرف."
-
-#: apps/authentication/views.py:52
-msgid "Login successful"
-msgstr "تم تسجيل الدخول بنجاح"
-
-#: apps/authentication/views.py:76
-msgid "OTP verified"
-msgstr "تم التحقق من رمز التحقق"
-
-#: apps/authentication/views.py:93
-msgid "Password reset successfully"
-msgstr "تمت إعادة تعيين كلمة المرور بنجاح"
-
-#: apps/authentication/views.py:119
-msgid "Password changed successfully"
-msgstr "تم تغيير كلمة المرور بنجاح"
-
-#: apps/authentication/views.py:134
-msgid "Logout successful"
-msgstr "تم تسجيل الخروج بنجاح"
-
-#: apps/authentication/views.py:151
-msgid "Account deleted successfully"
-msgstr "تم حذف الحساب بنجاح"
-
-#: apps/authentication/utils.py:25
-msgid "Phone number is required"
-msgstr "رقم الهاتف مطلوب"
-
-#: apps/authentication/utils.py:35
-msgid "User not found"
-msgstr "المستخدم غير موجود"
-
-#: apps/authentication/utils.py:39 apps/authentication/utils.py:48
-msgid "OTP sent"
-msgstr "تم إرسال رمز التحقق"
-
-#: apps/authentication/utils.py:45
-msgid "Registration successful, OTP sent"
-msgstr "تم التسجيل بنجاح، وتم إرسال رمز التحقق"
-
-#: apps/store/models.py:8 apps/store/models.py:23 apps/store/models.py:54
-msgid "title"
-msgstr "العنوان"
-
-#: apps/store/models.py:9
-msgid "subtitle"
-msgstr "العنوان الفرعي"
-
-#: apps/store/models.py:10 apps/store/models.py:24 apps/store/models.py:55
-msgid "image"
-msgstr "الصورة"
-
-#: apps/store/models.py:15
-msgid "ad"
-msgstr "إعلان"
-
-#: apps/store/models.py:16
-msgid "ads"
-msgstr "الإعلانات"
-
-#: apps/store/models.py:31
-msgid "parent"
-msgstr "التصنيف الأب"
-
-#: apps/store/models.py:40 apps/store/models.py:52
-msgid "category"
-msgstr "التصنيف"
-
-#: apps/store/models.py:41
-msgid "categories"
-msgstr "التصنيفات"
-
-#: apps/store/models.py:56
-msgid "description"
-msgstr "الوصف"
-
-#: apps/store/models.py:64
-msgid "default price"
-msgstr "السعر الافتراضي"
-
-#: apps/store/models.py:70
-msgid "newest"
-msgstr "الأحدث"
-
-#: apps/store/models.py:71
-msgid "best seller"
-msgstr "الأكثر مبيعًا"
-
-#: apps/store/models.py:76
-msgid "product"
-msgstr "المنتج"
-
-#: apps/store/models.py:77
-msgid "products"
-msgstr "المنتجات"
-
+#: apps/core/models.py:20
 msgid "API throttle cache entry"
 msgstr "مدخل ذاكرة التخزين المؤقت لتقييد طلبات API"
 
+#: apps/core/models.py:21
 msgid "API throttle cache entries"
 msgstr "مدخلات ذاكرة التخزين المؤقت لتقييد طلبات API"
 
-msgid "Compare-at price must be greater than the default price."
-msgstr "يجب أن يكون السعر قبل الخصم أكبر من السعر الافتراضي."
-
-msgid "Choose only from product, category, brand, branch, and ad."
-msgstr "اختر فقط من المنتج أو التصنيف أو العلامة التجارية أو الفرع أو الإعلان."
-
-msgid "Category and parent must belong to the same branch."
-msgstr "يجب أن ينتمي التصنيف والتصنيف الأب إلى الفرع نفسه."
-
-msgid "Category and children must belong to the same branch."
-msgstr "يجب أن ينتمي التصنيف والتصنيفات الفرعية إلى الفرع نفسه."
-
-msgid "Category parent cannot be itself or a descendant."
-msgstr "لا يمكن أن يكون التصنيف الأب هو التصنيف نفسه أو أحد تصنيفاته الفرعية."
-
-msgid "This catalog resource is in use and cannot be deleted."
-msgstr "عنصر الكتالوج هذا قيد الاستخدام ولا يمكن حذفه."
-
-msgid "brand"
-msgstr "العلامة التجارية"
-
-msgid "brands"
-msgstr "العلامات التجارية"
-
-msgid "branch"
-msgstr "الفرع"
-
-msgid "branches"
-msgstr "الفروع"
-
-msgid "Error"
-msgstr "خطأ"
-
-msgid "If the account exists, an OTP has been sent."
-msgstr "إذا كان الحساب موجودًا، فقد تم إرسال رمز تحقق."
-
-msgid "Invalid credentials."
-msgstr "بيانات تسجيل الدخول غير صحيحة."
-
-msgid "Invalid guest token."
-msgstr "رمز الزائر غير صالح."
-
-msgid "Invalid or expired OTP"
-msgstr "رمز التحقق غير صالح أو منتهي الصلاحية"
-
-msgid "Invalid or expired reset token"
-msgstr "رمز إعادة التعيين غير صالح أو منتهي الصلاحية"
-
-msgid "OTP delivery is temporarily unavailable."
-msgstr "خدمة إرسال رمز التحقق غير متاحة مؤقتًا."
-
-msgid "Product cannot be changed."
-msgstr "لا يمكن تغيير المنتج."
-
-msgid "Refresh token does not belong to this user."
-msgstr "رمز التحديث لا يخص هذا المستخدم."
-
+#: apps/core/responses.py:22
 msgid "Success"
 msgstr "تم بنجاح"
 
-msgid "Token is no longer valid."
-msgstr "لم يعد الرمز صالحًا."
+#: apps/core/responses.py:23
+msgid "Error"
+msgstr "خطأ"
 
+#: apps/core/responses.py:67
 msgid "Validation error"
 msgstr "خطأ في التحقق من البيانات"
 
-msgid "You already reviewed this product."
-msgstr "لقد قيّمت هذا المنتج من قبل."
-
-msgid "Your Wasla verification code"
-msgstr "رمز التحقق الخاص بك من وصلة"
-
-msgid "Your verification code is %(otp)s. It expires in %(minutes)s minutes."
-msgstr "رمز التحقق الخاص بك هو %(otp)s. تنتهي صلاحيته خلال %(minutes)s دقائق."
-
-msgid "compare-at price"
-msgstr "السعر قبل الخصم"
-
-msgid "guest user"
-msgstr "مستخدم زائر"
-
-msgid "guest users"
-msgstr "المستخدمون الزائرون"
-
-msgid "expires at"
-msgstr "ينتهي في"
-
-msgid "otp purpose"
-msgstr "غرض رمز التحقق"
-
-msgid "product image"
-msgstr "صورة المنتج"
-
-msgid "product images"
-msgstr "صور المنتج"
-
-msgid "product review"
-msgstr "تقييم المنتج"
-
-msgid "product reviews"
-msgstr "تقييمات المنتجات"
-
-msgid "rating"
-msgstr "التقييم"
-
-msgid "reward points"
-msgstr "نقاط المكافآت"
-
-msgid "stock quantity"
-msgstr "كمية المخزون"
-
-msgid "token version"
-msgstr "إصدار الرمز"
-
-msgid "user"
-msgstr "المستخدم"
-
-msgid "users"
-msgstr "المستخدمون"
-
-msgid "Account"
-msgstr "الحساب"
-
+#: apps/store/admin.py:27
 msgid "Additional product image"
 msgstr "صورة إضافية للمنتج"
 
+#: apps/store/admin.py:28 templates/admin/store/product/change_form.html:341
 msgid "Additional product images"
 msgstr "صور إضافية للمنتج"
 
-msgid "Administration"
-msgstr "الإدارة"
-
-msgid "Advertisements"
-msgstr "الإعلانات"
-
-msgid "Available product units"
-msgstr "وحدات المنتجات المتاحة"
-
-msgid "Available quantity"
-msgstr "الكمية المتاحة"
-
-msgid "Branches"
-msgstr "الفروع"
-
-msgid "Brands"
-msgstr "العلامات التجارية"
-
-msgid "Catalog"
-msgstr "الكتالوج"
-
-msgid "Categories"
-msgstr "التصنيفات"
-
+#: apps/store/admin.py:91 apps/store/forms.py:72 templates/admin/index.html:128
 msgid "Category"
 msgstr "التصنيف"
 
-msgid "Compare-at price"
-msgstr "السعر قبل الخصم"
-
-msgid "Compare-at price must be greater than the selling price."
-msgstr "يجب أن يكون السعر قبل الخصم أكبر من سعر البيع."
-
-msgid "Create user"
-msgstr "إنشاء مستخدم"
-
-msgid "Customers"
-msgstr "العملاء"
-
-msgid "Full description"
-msgstr "الوصف الكامل"
-
-msgid "Guest Sessions"
-msgstr "جلسات الزوار"
-
+#: apps/store/admin.py:152
 msgid "Image"
 msgstr "الصورة"
 
-msgid "Inventory Units"
-msgstr "وحدات المخزون"
-
-msgid "Low Stock"
-msgstr "مخزون منخفض"
-
-msgid "Optional. It must be greater than the selling price."
-msgstr "اختياري. يجب أن يكون أكبر من سعر البيع."
-
-msgid "Overview"
-msgstr "نظرة عامة"
-
-msgid "Personal information"
-msgstr "المعلومات الشخصية"
-
-msgid "Primary product image"
-msgstr "صورة المنتج الرئيسية"
-
-msgid "Product Reviews"
-msgstr "تقييمات المنتجات"
-
+#: apps/store/forms.py:18
 msgid "Product name"
 msgstr "اسم المنتج"
 
-msgid "Products"
-msgstr "المنتجات"
-
-msgid "Products in the catalog"
-msgstr "المنتجات الموجودة في الكتالوج"
-
-msgid "Products with 1–5 units"
-msgstr "المنتجات التي تحتوي على 1–5 وحدات"
-
-msgid "Registered Customers"
-msgstr "العملاء المسجلون"
-
-msgid "Registered customer accounts"
-msgstr "حسابات العملاء المسجلين"
-
-msgid "Reward points"
-msgstr "نقاط المكافآت"
-
-msgid "Security information"
-msgstr "معلومات الأمان"
-
-msgid "Select a category"
-msgstr "اختر تصنيفًا"
-
-msgid "Seller Dashboard"
-msgstr "لوحة تحكم البائع"
-
-msgid "Selling price"
-msgstr "سعر البيع"
-
-msgid "Show as best seller"
-msgstr "إظهاره كأكثر مبيعًا"
-
-msgid "Show as new"
-msgstr "إظهاره كمنتج جديد"
-
-msgid "Staff Groups"
-msgstr "مجموعات الموظفين"
-
-msgid "Use a square JPG, PNG, or WebP image for the best result."
-msgstr "استخدم صورة مربعة بصيغة JPG أو PNG أو WebP للحصول على أفضل نتيجة."
-
-msgid "Wasla Marketplace"
-msgstr "سوق وصلة"
-
-msgid "Wasla Seller Dashboard"
-msgstr "لوحة تحكم بائع وصلة"
-
+#: apps/store/forms.py:31
 msgid "اسم المنتج"
 msgstr "اسم المنتج"
 
+#: apps/store/forms.py:44
+msgid "Full description"
+msgstr "الوصف الكامل"
+
+#: apps/store/forms.py:59
 msgid "الوصف الكامل"
 msgstr "الوصف الكامل"
+
+#: apps/store/forms.py:77
+msgid "Select a category"
+msgstr "اختر تصنيفًا"
+
+#: apps/store/forms.py:82
+msgid "Primary product image"
+msgstr "صورة المنتج الرئيسية"
+
+#: apps/store/forms.py:84
+msgid "Use a square JPG, PNG, or WebP image for the best result."
+msgstr "استخدم صورة مربعة بصيغة JPG أو PNG أو WebP للحصول على أفضل نتيجة."
+
+#: apps/store/forms.py:89
+msgid "Selling price"
+msgstr "سعر البيع"
+
+#: apps/store/forms.py:103
+msgid "Compare-at price"
+msgstr "السعر قبل الخصم"
+
+#: apps/store/forms.py:108
+msgid "Optional. It must be greater than the selling price."
+msgstr "اختياري. يجب أن يكون أكبر من سعر البيع."
+
+#: apps/store/forms.py:119
+msgid "Available quantity"
+msgstr "الكمية المتاحة"
+
+#: apps/store/forms.py:131
+msgid "Reward points"
+msgstr "نقاط المكافآت"
+
+#: apps/store/forms.py:143
+msgid "Show as new"
+msgstr "إظهاره كمنتج جديد"
+
+#: apps/store/forms.py:149
+msgid "Show as best seller"
+msgstr "إظهاره كأكثر مبيعًا"
+
+#: apps/store/forms.py:185
+msgid "Compare-at price must be greater than the selling price."
+msgstr "يجب أن يكون السعر قبل الخصم أكبر من سعر البيع."
+
+#: apps/store/models.py:12 apps/store/models.py:36 apps/store/models.py:54
+#: apps/store/models.py:78 apps/store/models.py:141
+msgid "title"
+msgstr "العنوان"
+
+#: apps/store/models.py:14 apps/store/models.py:38 apps/store/models.py:57
+#: apps/store/models.py:80 apps/store/models.py:143 apps/store/models.py:210
+msgid "image"
+msgstr "الصورة"
+
+#: apps/store/models.py:21 apps/store/models.py:34
+msgid "brand"
+msgstr "العلامة التجارية"
+
+#: apps/store/models.py:22
+msgid "brands"
+msgstr "العلامات التجارية"
+
+#: apps/store/models.py:45 apps/store/models.py:76
+msgid "branch"
+msgstr "الفرع"
+
+#: apps/store/models.py:46
+msgid "branches"
+msgstr "الفروع"
+
+#: apps/store/models.py:55
+msgid "subtitle"
+msgstr "العنوان الفرعي"
+
+#: apps/store/models.py:64
+msgid "ad"
+msgstr "إعلان"
+
+#: apps/store/models.py:65
+msgid "ads"
+msgstr "الإعلانات"
+
+#: apps/store/models.py:91
+msgid "parent"
+msgstr "التصنيف الأب"
+
+#: apps/store/models.py:98 apps/store/models.py:139
+msgid "category"
+msgstr "التصنيف"
+
+#: apps/store/models.py:99
+msgid "categories"
+msgstr "التصنيفات"
+
+#: apps/store/models.py:109 apps/store/serializers.py:108
+msgid "Category parent cannot be itself or a descendant."
+msgstr "لا يمكن أن يكون التصنيف الأب هو التصنيف نفسه أو أحد تصنيفاته الفرعية."
+
+#: apps/store/models.py:118 apps/store/serializers.py:113
+msgid "Category and parent must belong to the same branch."
+msgstr "يجب أن ينتمي التصنيف والتصنيف الأب إلى الفرع نفسه."
+
+#: apps/store/models.py:127 apps/store/serializers.py:124
+msgid "Category and children must belong to the same branch."
+msgstr "يجب أن ينتمي التصنيف والتصنيفات الفرعية إلى الفرع نفسه."
+
+#: apps/store/models.py:148 apps/store/models.py:238
+msgid "description"
+msgstr "الوصف"
+
+#: apps/store/models.py:150
+msgid "stock quantity"
+msgstr "كمية المخزون"
+
+#: apps/store/models.py:156
+msgid "default price"
+msgstr "السعر الافتراضي"
+
+#: apps/store/models.py:163
+msgid "compare-at price"
+msgstr "السعر قبل الخصم"
+
+#: apps/store/models.py:170
+msgid "newest"
+msgstr "الأحدث"
+
+#: apps/store/models.py:171
+msgid "best seller"
+msgstr "الأكثر مبيعًا"
+
+#: apps/store/models.py:174 apps/store/models.py:208 apps/store/models.py:226
+msgid "product"
+msgstr "المنتج"
+
+#: apps/store/models.py:175
+msgid "products"
+msgstr "المنتجات"
+
+#: apps/store/models.py:213
+msgid "product image"
+msgstr "صورة المنتج"
+
+#: apps/store/models.py:214
+msgid "product images"
+msgstr "صور المنتج"
+
+#: apps/store/models.py:235
+msgid "rating"
+msgstr "التقييم"
+
+#: apps/store/models.py:241
+msgid "product review"
+msgstr "تقييم المنتج"
+
+#: apps/store/models.py:242
+msgid "product reviews"
+msgstr "تقييمات المنتجات"
+
+#: apps/store/serializers.py:29
+msgid "Choose only from product, category, brand, branch, and ad."
+msgstr "اختر فقط من المنتج أو التصنيف أو العلامة التجارية أو الفرع أو الإعلان."
+
+#: apps/store/serializers.py:181
+msgid "Compare-at price must be greater than the default price."
+msgstr "يجب أن يكون السعر قبل الخصم أكبر من السعر الافتراضي."
+
+#: apps/store/serializers.py:223
+msgid "Product cannot be changed."
+msgstr "لا يمكن تغيير المنتج."
+
+#: apps/store/serializers.py:239 apps/store/views.py:31
+msgid "You already reviewed this product."
+msgstr "لقد قيّمت هذا المنتج من قبل."
+
+#: apps/store/views.py:37
+msgid "This catalog resource is in use and cannot be deleted."
+msgstr "عنصر الكتالوج هذا قيد الاستخدام ولا يمكن حذفه."
+
+#: project/settings/local.py:74
+msgid "Wasla Seller Dashboard"
+msgstr "لوحة تحكم بائع وصلة"
+
+#: project/settings/local.py:75 templates/admin/index.html:18
+msgid "Wasla Marketplace"
+msgstr "سوق وصلة"
+
+#: project/settings/local.py:125
+msgid "Overview"
+msgstr "نظرة عامة"
+
+#: project/settings/local.py:136 templates/admin/index.html:166
+msgid "Catalog"
+msgstr "الكتالوج"
+
+#: project/settings/local.py:149 templates/admin/index.html:83
+msgid "Categories"
+msgstr "التصنيفات"
+
+#: project/settings/local.py:157 templates/admin/index.html:78
+msgid "Brands"
+msgstr "العلامات التجارية"
+
+#: project/settings/local.py:165
+msgid "Branches"
+msgstr "الفروع"
+
+#: project/settings/local.py:173
+msgid "Advertisements"
+msgstr "الإعلانات"
+
+#: project/settings/local.py:181
+msgid "Product Reviews"
+msgstr "تقييمات المنتجات"
+
+#: project/settings/local.py:196
+msgid "Registered Customers"
+msgstr "العملاء المسجلون"
+
+#: project/settings/local.py:204
+msgid "Guest Sessions"
+msgstr "جلسات الزوار"
+
+#: project/settings/local.py:216
+msgid "Administration"
+msgstr "الإدارة"
+
+#: project/settings/local.py:221
+msgid "Staff Groups"
+msgstr "مجموعات الموظفين"
+
+#: project/settings/local.py:318
+#: templates/admin/store/product/change_form.html:91
+#: templates/admin/store/product/change_form.html:119
+msgid "English"
+msgstr "الإنجليزية"
+
+#: project/settings/local.py:319
+#: templates/admin/store/product/change_form.html:100
+#: templates/admin/store/product/change_form.html:159
+msgid "Arabic"
+msgstr "العربية"
+
+#: project/urls.py:11
+msgid "Wasla Admin"
+msgstr "إدارة وصلة"
+
+#: project/urls.py:12
+msgid "Wasla Admin Portal"
+msgstr "بوابة إدارة وصلة"
+
+#: project/urls.py:13
+msgid "Welcome to Wasla Admin Portal"
+msgstr "مرحبًا بك في بوابة إدارة وصلة"
+
+#: templates/admin/index.html:24
+msgid "Manage your catalog, inventory and customers from one place."
+msgstr "أدر الكتالوج والمخزون والعملاء من مكان واحد."
+
+#: templates/admin/index.html:33
+msgid "Add Category"
+msgstr "إضافة تصنيف"
+
+#: templates/admin/index.html:40
+msgid "Add Product"
+msgstr "إضافة منتج"
+
+#: templates/admin/index.html:69
+msgid "Storefront"
+msgstr "واجهة المتجر"
+
+#: templates/admin/index.html:71
+msgid "Catalog Health"
+msgstr "حالة الكتالوج"
+
+#: templates/admin/index.html:88
+msgid "Out of stock"
+msgstr "نفد من المخزون"
+
+#: templates/admin/index.html:93
+msgid "Best sellers"
+msgstr "الأكثر مبيعًا"
+
+#: templates/admin/index.html:98
+msgid "Missing Arabic content"
+msgstr "المحتوى العربي الناقص"
+
+#: templates/admin/index.html:103
+msgid "Product reviews"
+msgstr "تقييمات المنتجات"
+
+#: templates/admin/index.html:113
+#: templates/admin/store/product/change_form.html:284
+msgid "Inventory"
+msgstr "المخزون"
+
+#: templates/admin/index.html:115
+msgid "Low Stock Products"
+msgstr "المنتجات منخفضة المخزون"
+
+#: templates/admin/index.html:119 templates/admin/index.html:172
+#: templates/admin/index.html:208
+msgid "View all"
+msgstr "عرض الكل"
+
+#: templates/admin/index.html:127 templates/admin/index.html:216
+msgid "Product"
+msgstr "المنتج"
+
+#: templates/admin/index.html:129
+msgid "Stock"
+msgstr "المخزون"
+
+#: templates/admin/index.html:153
+msgid "There are no low-stock products."
+msgstr "لا توجد منتجات منخفضة المخزون."
+
+#: templates/admin/index.html:168
+msgid "Recently Added Products"
+msgstr "المنتجات المضافة حديثًا"
+
+#: templates/admin/index.html:191
+msgid "No products have been added yet."
+msgstr "لم تتم إضافة أي منتجات بعد."
+
+#: templates/admin/index.html:202
+msgid "Customer Feedback"
+msgstr "آراء العملاء"
+
+#: templates/admin/index.html:204
+msgid "Recent Product Reviews"
+msgstr "أحدث تقييمات المنتجات"
+
+#: templates/admin/index.html:217
+msgid "Customer"
+msgstr "العميل"
+
+#: templates/admin/index.html:218
+msgid "Rating"
+msgstr "التقييم"
+
+#: templates/admin/index.html:219
+msgid "Review"
+msgstr "المراجعة"
+
+#: templates/admin/index.html:220
+msgid "Date"
+msgstr "التاريخ"
+
+#: templates/admin/index.html:244
+msgid "There are no product reviews yet."
+msgstr "لا توجد تقييمات للمنتجات بعد."
+
+#: templates/admin/store/product/change_form.html:26
+msgid "Product workspace"
+msgstr "مساحة عمل المنتج"
+
+#: templates/admin/store/product/change_form.html:31
+msgid "Add a new product"
+msgstr "إضافة منتج جديد"
+
+#: templates/admin/store/product/change_form.html:33
+msgid "Edit product"
+msgstr "تعديل المنتج"
+
+#: templates/admin/store/product/change_form.html:38
+msgid "Enter customer-facing content in both languages, then complete the shared product data once."
+msgstr "أدخل المحتوى الظاهر للعملاء باللغتين، ثم أكمل بيانات المنتج المشتركة مرة واحدة."
+
+#: templates/admin/store/product/change_form.html:44
+msgid "Last updated"
+msgstr "آخر تحديث"
+
+#: templates/admin/store/product/change_form.html:70
+msgid "Product content"
+msgstr "محتوى المنتج"
+
+#: templates/admin/store/product/change_form.html:73
+msgid "This information is shown to customers in their selected language."
+msgstr "تظهر هذه المعلومات للعملاء باللغة التي يختارونها."
+
+#: templates/admin/store/product/change_form.html:82
+msgid "Product language"
+msgstr "لغة المنتج"
+
+#: templates/admin/store/product/change_form.html:198
+msgid "Primary media"
+msgstr "الوسائط الرئيسية"
+
+#: templates/admin/store/product/change_form.html:201
+msgid "The primary image appears first in listings and product details."
+msgstr "تظهر الصورة الرئيسية أولًا في القوائم وتفاصيل المنتج."
+
+#: templates/admin/store/product/change_form.html:225
+msgid "Organization"
+msgstr "التنظيم"
+
+#: templates/admin/store/product/change_form.html:226
+msgid "Help customers find the product."
+msgstr "ساعد العملاء في العثور على المنتج."
+
+#: templates/admin/store/product/change_form.html:243
+msgid "Pricing"
+msgstr "التسعير"
+
+#: templates/admin/store/product/change_form.html:244
+msgid "Set customer-facing prices in EGP."
+msgstr "حدّد الأسعار الظاهرة للعملاء بالجنيه المصري."
+
+#: templates/admin/store/product/change_form.html:253
+#: templates/admin/store/product/change_form.html:261
+msgid "EGP"
+msgstr "ج.م"
+
+#: templates/admin/store/product/change_form.html:268
+msgid "Current discount"
+msgstr "الخصم الحالي"
+
+#: templates/admin/store/product/change_form.html:287
+msgid "Control available units and rewards."
+msgstr "تحكّم في الوحدات المتاحة والمكافآت."
+
+#: templates/admin/store/product/change_form.html:309
+msgid "Merchandising"
+msgstr "عرض المنتجات"
+
+#: templates/admin/store/product/change_form.html:312
+msgid "Choose where the product is highlighted."
+msgstr "اختر مواضع إبراز المنتج."
+
+#: templates/admin/store/product/change_form.html:318
+msgid "Highlight this product in the newest-products area."
+msgstr "أبرز هذا المنتج في قسم أحدث المنتجات."
+
+#: templates/admin/store/product/change_form.html:322
+msgid "Highlight this product in the best-sellers area."
+msgstr "أبرز هذا المنتج في قسم الأكثر مبيعًا."
+
+#: templates/admin/store/product/change_form.html:344
+msgid "Add alternative angles, packaging, labels, and usage images."
+msgstr "أضف صورًا لزوايا أخرى والعبوة والملصقات وطريقة الاستخدام."
+
+#~ msgid "Personal info"
+#~ msgstr "المعلومات الشخصية"
+
+#~ msgid "OTP"
+#~ msgstr "رمز التحقق"

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from unfold.widgets import (
@@ -49,8 +53,7 @@ class ProductAdminForm(forms.ModelForm):
                 "lang": "en",
                 "rows": 8,
                 "placeholder": (
-                    "Describe the product, its benefits, "
-                    "features, and usage."
+                    "Describe the product, its benefits, " "features, and usage."
                 ),
             }
         ),
@@ -64,15 +67,12 @@ class ProductAdminForm(forms.ModelForm):
                 "dir": "rtl",
                 "lang": "ar",
                 "rows": 8,
-                "placeholder": (
-                    "اكتب وصف المنتج ومميزاته وفوائده "
-                    "وطريقة استخدامه"
-                ),
+                "placeholder": ("اكتب وصف المنتج ومميزاته وفوائده " "وطريقة استخدامه"),
             }
         ),
     )
 
-    category = forms.ModelChoiceField(
+    category: forms.ModelChoiceField[Category] = forms.ModelChoiceField(
         label=_("Category"),
         queryset=Category.objects.select_related(
             "branch",
@@ -85,10 +85,7 @@ class ProductAdminForm(forms.ModelForm):
     image = forms.ImageField(
         label=_("Primary product image"),
         required=False,
-        help_text=_(
-            "Use a square JPG, PNG, or WebP image "
-            "for the best result."
-        ),
+        help_text=_("Use a square JPG, PNG, or WebP image " "for the best result."),
         widget=UnfoldAdminImageFieldWidget(),
     )
 
@@ -112,9 +109,7 @@ class ProductAdminForm(forms.ModelForm):
         min_value=0,
         max_digits=10,
         decimal_places=2,
-        help_text=_(
-            "Optional. It must be greater than the selling price."
-        ),
+        help_text=_("Optional. It must be greater than the selling price."),
         widget=UnfoldAdminDecimalFieldWidget(
             attrs={
                 "min": "0",
@@ -178,8 +173,8 @@ class ProductAdminForm(forms.ModelForm):
             "is_best_seller",
         )
 
-    def clean(self):
-        cleaned_data = super().clean()
+    def clean(self) -> dict[str, Any]:
+        cleaned_data = super().clean() or {}
 
         default_price = cleaned_data.get("default_price")
         compare_at_price = cleaned_data.get("compare_at_price")
@@ -191,22 +186,7 @@ class ProductAdminForm(forms.ModelForm):
         ):
             self.add_error(
                 "compare_at_price",
-                _(
-                    "Compare-at price must be greater "
-                    "than the selling price."
-                ),
+                _("Compare-at price must be greater " "than the selling price."),
             )
 
         return cleaned_data
-
-    def save(self, commit=True):
-        product = super().save(commit=False)
-
-        product.title = self.cleaned_data["title_en"]
-        product.description = self.cleaned_data["description_en"]
-
-        if commit:
-            product.save()
-            self.save_m2m()
-
-        return product

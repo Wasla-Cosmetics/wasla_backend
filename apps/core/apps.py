@@ -5,7 +5,7 @@ from django.db.models.signals import post_migrate
 class CoreConfig(AppConfig):
     name = "apps.core"
 
-    def ready(self):
+    def ready(self) -> None:
         from apps.core.signals import ensure_default_media
 
         post_migrate.connect(

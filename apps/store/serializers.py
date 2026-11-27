@@ -1,11 +1,13 @@
+from typing import Any
+
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 from apps.core.serializers import AllLanguagesModelSerializer
 from apps.store.models import (
     Ad,
-    Brand,
     Branch,
+    Brand,
     Category,
     Product,
     ProductImage,
@@ -18,7 +20,7 @@ class CatalogSearchQuerySerializer(serializers.Serializer):
     q = serializers.CharField(min_length=2, max_length=100, trim_whitespace=True)
     types = serializers.CharField(required=False, allow_blank=False)
 
-    def validate_types(self, value):
+    def validate_types(self, value: str) -> tuple[str, ...]:
         result_types = tuple(
             dict.fromkeys(item.strip().lower() for item in value.split(","))
         )
@@ -30,7 +32,7 @@ class CatalogSearchQuerySerializer(serializers.Serializer):
             )
         return result_types
 
-    def validate(self, attrs):
+    def validate(self, attrs: Any) -> dict[str, Any]:
         attrs.setdefault("types", CATALOG_SEARCH_TYPES)
         return attrs
 
@@ -87,7 +89,7 @@ class CategorySerializer(AllLanguagesModelSerializer):
         model = Category
         fields = ["id", "branch_id", "branch", "title", "image", "parent"]
 
-    def validate(self, attrs):
+    def validate(self, attrs: Any) -> dict[str, Any]:
         branch = attrs.get(
             "branch",
             self.instance.branch if self.instance else None,
@@ -164,7 +166,7 @@ class ProductSerializer(AllLanguagesModelSerializer):
             "is_best_seller",
         ]
 
-    def validate(self, attrs):
+    def validate(self, attrs: Any) -> dict[str, Any]:
         default_price = attrs.get(
             "default_price",
             self.instance.default_price if self.instance else 0,
@@ -212,7 +214,7 @@ class ProductReviewSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def validate(self, attrs):
+    def validate(self, attrs: Any) -> dict[str, Any]:
         request = self.context.get("request")
         user = getattr(request, "user", None)
         product = attrs.get("product")
@@ -251,7 +253,7 @@ class CatalogSearchResultSerializer(serializers.Serializer):
         "ad": AdSerializer,
     }
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Any) -> dict[str, Any]:
         result_type = instance["type"]
         serializer_class = self.serializer_classes[result_type]
         serialized = serializer_class(

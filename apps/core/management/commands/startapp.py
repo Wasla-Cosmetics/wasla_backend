@@ -3,6 +3,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 from django.core.management import CommandError, call_command
 from django.core.management.commands.startapp import Command as DjangoStartAppCommand
@@ -10,13 +11,16 @@ from django.utils.translation import gettext_lazy as _
 
 
 class Command(DjangoStartAppCommand):
-    help = _(
-        "Create a Django app, fix its dotted app path, and register it in LOCAL_APPS. "
-        "A plain name creates the app at project root. A path creates it at that path. "
-        "Examples: startapp orders, startapp apps/orders, startapp orders apps/orders."
+    help = cast(
+        str,
+        _(
+            "Create a Django app, fix its dotted app path, and register it in LOCAL_APPS. "
+            "A plain name creates the app at project root. A path creates it at that path. "
+            "Examples: startapp orders, startapp apps/orders, startapp orders apps/orders."
+        ),
     )
 
-    def handle(self, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         app_name, app_dir, app_path = self._resolve_app_target(
             options["name"], options.get("directory")
         )
@@ -45,14 +49,16 @@ class Command(DjangoStartAppCommand):
             )
         )
 
-    def _validate_app_name(self, app_name):
+    def _validate_app_name(self, app_name: str) -> None:
         if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", app_name):
             raise CommandError(
                 _("Invalid app name: %(app_name)s. Use a valid Python identifier.")
                 % {"app_name": app_name}
             )
 
-    def _resolve_app_target(self, name, directory):
+    def _resolve_app_target(
+        self, name: str, directory: str | None
+    ) -> tuple[str, Path, str]:
         if directory:
             app_name = name
             app_dir = Path(directory)
@@ -71,11 +77,11 @@ class Command(DjangoStartAppCommand):
         app_path = ".".join(app_dir.parts)
         return app_name, app_dir, app_path
 
-    def _validate_app_path(self, app_path):
+    def _validate_app_path(self, app_path: str) -> None:
         for part in app_path.split("."):
             self._validate_app_name(part)
 
-    def _ensure_parent_packages(self, app_dir):
+    def _ensure_parent_packages(self, app_dir: Path) -> None:
         current = Path()
         for part in app_dir.parts[:-1]:
             current = current / part
@@ -83,16 +89,16 @@ class Command(DjangoStartAppCommand):
             init_file = current / "__init__.py"
             init_file.touch(exist_ok=True)
 
-    def _config_class_name(self, app_name):
+    def _config_class_name(self, app_name: str) -> str:
         return "".join(part.capitalize() for part in app_name.split("_")) + "Config"
 
-    def _fix_app_config(self, apps_file, app_name, app_path):
+    def _fix_app_config(self, apps_file: Path, app_name: str, app_path: str) -> None:
         apps_text = apps_file.read_text()
         apps_text = apps_text.replace(f"name = '{app_name}'", f'name = "{app_path}"')
         apps_text = apps_text.replace(f'name = "{app_name}"', f'name = "{app_path}"')
         apps_file.write_text(apps_text)
 
-    def _register_app(self, config_path):
+    def _register_app(self, config_path: str) -> None:
         settings_file = Path("project/settings/local.py")
         settings_text = settings_file.read_text()
         if config_path in settings_text:
@@ -111,13 +117,13 @@ class Command(DjangoStartAppCommand):
             _("Could not find end of LOCAL_APPS in project/settings/local.py")
         )
 
-    def _find_local_apps_start(self, lines):
+    def _find_local_apps_start(self, lines: list[str]) -> int:
         for index, line in enumerate(lines):
             if line.startswith("LOCAL_APPS = ["):
                 return index
         raise CommandError(_("Could not find LOCAL_APPS in project/settings/local.py"))
 
-    def _run_black(self, app_dir):
+    def _run_black(self, app_dir: Path) -> None:
         if importlib.util.find_spec("black") is None:
             return
         subprocess.run(

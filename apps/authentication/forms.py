@@ -1,5 +1,7 @@
 from unfold.forms import (
     UserChangeForm as UnfoldUserChangeForm,
+)
+from unfold.forms import (
     UserCreationForm as UnfoldUserCreationForm,
 )
 

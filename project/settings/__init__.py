@@ -2,7 +2,8 @@
 Settings config
 """
 
-from os import R_OK, access, environ as env
+from os import R_OK, access
+from os import environ as env
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
